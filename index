@@ -186,12 +186,11 @@
     // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyD4dt1u-HycuI3o_cJkz7DIIu3O3R0LLa4",
-   authDomain: "self-chedule.firebaseapp.com",
-  projectId: "self-chedule",
-  storageBucket: "self-chedule.firebasestorage.app",
-  messagingSenderId: "253003587609",
-  appId: "1:253003587609:web:f6ea16ac99de6fe869ca88",
-  measurementId: "G-TZ6V01F3N0"
+      authDomain: "self-chedule.firebaseapp.com",
+      projectId: "self-chedule",
+      storageBucket: "self-chedule.firebasestorage.app",
+      messagingSenderId: "253003587609",
+      appId: "1:253003587609:web:f6ea16ac99de6fe869ca88"
     };
 
     let db = null;
