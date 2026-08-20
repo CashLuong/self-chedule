@@ -182,7 +182,7 @@
 
   <script>
     // ==========================================
-    // CẤU HÌNH FIREBASE CỦA BẠN (Dán thông tin vào đây)
+    // CẤU HÌNH FIREBASE ĐÃ ÁP DỤNG
     // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyD4dt1u-HycuI3o_cJkz7DIIu3O3R0LLa4",
@@ -190,7 +190,8 @@
       projectId: "self-chedule",
       storageBucket: "self-chedule.firebasestorage.app",
       messagingSenderId: "253003587609",
-      appId: "1:253003587609:web:f6ea16ac99de6fe869ca88"
+      appId: "1:253003587609:web:f6ea16ac99de6fe869ca88",
+      measurementId: "G-TZ6V01F3N0"
     };
 
     let db = null;
@@ -198,17 +199,13 @@
     let currentUser = null;
     let unsubscribeSnapshot = null;
 
-    // Khởi tạo Firebase nếu có cấu hình
-    if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-      try {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-        auth = firebase.auth();
-        // Bật lưu trữ offline tự động của Firestore
-        db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log(err));
-      } catch (e) {
-        console.error("Lỗi khởi tạo Firebase:", e);
-      }
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      auth = firebase.auth();
+      db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log(err));
+    } catch (e) {
+      console.error("Lỗi khởi tạo Firebase:", e);
     }
 
     const statusMap = {
@@ -245,16 +242,12 @@
     }
 
     function handleAuth() {
-      if (!auth) {
-        alert("Vui lòng cấu hình Firebase trong code trước khi dùng tính năng đăng nhập Google!");
-        return;
-      }
+      if (!auth) return;
       if (currentUser) {
         auth.signOut();
       } else {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider).catch(error => {
-          // Fallback cho trình duyệt di động / PWA nếu Popup bị chặn
           if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
             auth.signInWithRedirect(provider);
           } else {
@@ -277,7 +270,6 @@
           localStorage.setItem("calendar_events", JSON.stringify(eventsData));
           renderTimeline();
         } else {
-          // Đẩy dữ liệu local hiện tại lên cloud nếu trên mây chưa có
           userDocRef.set({ events: eventsData }, { merge: true });
         }
       }, err => console.log("Snapshot error:", err));
@@ -285,7 +277,6 @@
 
     function saveToStorage() {
       localStorage.setItem("calendar_events", JSON.stringify(eventsData));
-      // Tự động đồng bộ lên Firebase nếu đã đăng nhập
       if (currentUser && db) {
         db.collection("users").doc(currentUser.uid).set({
           events: eventsData,
