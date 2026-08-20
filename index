@@ -8,6 +8,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-icon" href="https://via.placeholder.com/192.png?text=L%E1%BB%8Bch">
   
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
   <style>
     :root {
       --bg: #f8fafc;
@@ -40,6 +45,17 @@
       position: sticky; top: 0; background: var(--card-bg); border-bottom: 1px solid var(--border);
       padding: 12px 16px; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
+    .auth-banner {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed var(--border); font-size: 0.85rem;
+    }
+    .user-info { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+    .user-avatar { width: 24px; height: 24px; border-radius: 50%; }
+    .btn-auth {
+      background: var(--primary); color: #fff; border: none; padding: 4px 10px;
+      border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 600;
+    }
+
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .month-nav { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 1.1rem; }
     .btn-icon { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text); padding: 4px; }
@@ -73,7 +89,7 @@
 
     .note-text { font-size: 0.9rem; color: var(--text); white-space: pre-wrap; word-break: break-word; }
 
-    /* Modal Chỉnh Sửa */
+    /* Modal */
     .modal {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
       align-items: center; justify-content: center; z-index: 200; padding: 16px;
@@ -92,7 +108,6 @@
     .btn-primary { background: var(--primary); color: #fff; }
     .btn-secondary { background: var(--border); color: var(--text); }
 
-    /* Thanh chức năng phụ phía dưới */
     .bottom-bar {
       position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg);
       border-top: 1px solid var(--border); padding: 8px 16px; display: flex; justify-content: space-around;
@@ -102,10 +117,18 @@
 <body>
 
   <header>
+    <!-- Thanh Đăng nhập Google & Đồng bộ -->
+    <div class="auth-banner">
+      <div id="userInfo" class="user-info">
+        <span>⚪ Đang dùng Offline</span>
+      </div>
+      <button id="authBtn" class="btn-auth" onclick="handleAuth()">Đăng nhập Google</button>
+    </div>
+
     <div class="header-top">
       <div class="month-nav">
         <button class="btn-icon" onclick="changeMonth(-1)">◀</button>
-        <span id="currentMonthLabel">Tháng 08/2026</span>
+        <span id="currentMonthLabel">Tháng --/----</span>
         <button class="btn-icon" onclick="changeMonth(1)">▶</button>
       </div>
       <div>
@@ -158,6 +181,37 @@
   </div>
 
   <script>
+    // ==========================================
+    // CẤU HÌNH FIREBASE CỦA BẠN (Dán thông tin vào đây)
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4dt1u-HycuI3o_cJkz7DIIu3O3R0LLa4",
+   authDomain: "self-chedule.firebaseapp.com",
+  projectId: "self-chedule",
+  storageBucket: "self-chedule.firebasestorage.app",
+  messagingSenderId: "253003587609",
+  appId: "1:253003587609:web:f6ea16ac99de6fe869ca88",
+  measurementId: "G-TZ6V01F3N0"
+    };
+
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+    let unsubscribeSnapshot = null;
+
+    // Khởi tạo Firebase nếu có cấu hình
+    if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+      try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        auth = firebase.auth();
+        // Bật lưu trữ offline tự động của Firestore
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log(err));
+      } catch (e) {
+        console.error("Lỗi khởi tạo Firebase:", e);
+      }
+    }
+
     const statusMap = {
       empty: { text: "Trống", class: "status-empty", icon: "⚪" },
       nursing: { text: "Viện dưỡng lão", class: "status-nursing", icon: "🟢" },
@@ -169,8 +223,76 @@
     let eventsData = JSON.parse(localStorage.getItem("calendar_events") || "{}");
     let selectedDateKey = null;
 
+    // Quản lý Đăng nhập Google
+    if (auth) {
+      auth.onAuthStateChanged(user => {
+        currentUser = user;
+        const userInfoDiv = document.getElementById("userInfo");
+        const authBtn = document.getElementById("authBtn");
+
+        if (user) {
+          userInfoDiv.innerHTML = `
+            <img src="${user.photoURL || 'https://via.placeholder.com/24'}" class="user-avatar" />
+            <span>${escapeHtml(user.displayName || user.email)}</span>
+          `;
+          authBtn.innerText = "Đăng xuất";
+          listenToCloudChanges(user.uid);
+        } else {
+          userInfoDiv.innerHTML = `<span>⚪ Dùng Offline (Chưa đăng nhập)</span>`;
+          authBtn.innerText = "Đăng nhập Google";
+          if (unsubscribeSnapshot) unsubscribeSnapshot();
+        }
+      });
+    }
+
+    function handleAuth() {
+      if (!auth) {
+        alert("Vui lòng cấu hình Firebase trong code trước khi dùng tính năng đăng nhập Google!");
+        return;
+      }
+      if (currentUser) {
+        auth.signOut();
+      } else {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).catch(error => {
+          // Fallback cho trình duyệt di động / PWA nếu Popup bị chặn
+          if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+            auth.signInWithRedirect(provider);
+          } else {
+            alert("Lỗi đăng nhập: " + error.message);
+          }
+        });
+      }
+    }
+
+    // Lắng nghe thay đổi thời gian thực từ Cloud Firestore
+    function listenToCloudChanges(uid) {
+      if (!db) return;
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+      const userDocRef = db.collection("users").doc(uid);
+      unsubscribeSnapshot = userDocRef.onSnapshot(doc => {
+        if (doc.exists) {
+          const cloudData = doc.data().events || {};
+          eventsData = cloudData;
+          localStorage.setItem("calendar_events", JSON.stringify(eventsData));
+          renderTimeline();
+        } else {
+          // Đẩy dữ liệu local hiện tại lên cloud nếu trên mây chưa có
+          userDocRef.set({ events: eventsData }, { merge: true });
+        }
+      }, err => console.log("Snapshot error:", err));
+    }
+
     function saveToStorage() {
       localStorage.setItem("calendar_events", JSON.stringify(eventsData));
+      // Tự động đồng bộ lên Firebase nếu đã đăng nhập
+      if (currentUser && db) {
+        db.collection("users").doc(currentUser.uid).set({
+          events: eventsData,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(err => console.error("Lỗi đồng bộ Cloud:", err));
+      }
     }
 
     function toggleTheme() {
@@ -179,7 +301,6 @@
       localStorage.setItem("theme", isDark ? "light" : "dark");
     }
 
-    // Khởi tạo theme
     if (localStorage.getItem("theme") === "dark") {
       document.body.setAttribute("data-theme", "dark");
     }
@@ -205,8 +326,8 @@
       const searchQuery = document.getElementById("searchInput").value.toLowerCase();
       const filterType = document.getElementById("filterStatus").value;
 
-      const todayStr = formatDateKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
-
+      const now = new Date();
+      const todayStr = formatDateKey(now.getFullYear(), now.getMonth(), now.getDate());
       const weekdays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
       for (let day = 1; day <= totalDays; day++) {
@@ -214,7 +335,6 @@
         const dayData = eventsData[dateKey] || { type: "empty", note: "" };
         const dayOfWeek = weekdays[new Date(year, month, day).getDay()];
 
-        // Lọc dữ liệu
         if (filterType !== "all" && dayData.type !== filterType) continue;
         if (searchQuery && !dayData.note.toLowerCase().includes(searchQuery)) continue;
 
@@ -273,7 +393,6 @@
       return div.innerHTML;
     }
 
-    // Nhập/Xuất File JSON
     function exportData() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(eventsData, null, 2));
       const downloadAnchor = document.createElement('a');
@@ -301,12 +420,11 @@
       reader.readAsText(file);
     }
 
-    // Đăng ký thông báo
     function requestNotification() {
       if ("Notification" in window) {
         Notification.requestPermission().then(permission => {
           if (permission === "granted") {
-            new Notification("Lịch Cá Nhân", { body: "Đã bật nhắc hẹn thành công!" });
+            new Notification("Lịch Cá Nhân", { body: "Đã bật thông báo nhắc hẹn thành công!" });
           }
         });
       }
