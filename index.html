@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Lịch Cá Nhân</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="https://via.placeholder.com/192.png?text=L%E1%BB%8Bch">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --subtext: #64748b;
+      --border: #e2e8f0;
+      --primary: #3b82f6;
+      --highlight: #eff6ff;
+      --tag-empty: #94a3b8;
+      --tag-nursing: #10b981;
+      --tag-lawson: #0284c7;
+      --tag-outing: #f59e0b;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --subtext: #94a3b8;
+      --border: #334155;
+      --primary: #60a5fa;
+      --highlight: #1e3a8a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 20px; }
+
+    /* Header tối giản */
+    header {
+      position: sticky; top: 0; background: var(--card-bg); border-bottom: 1px solid var(--border);
+      padding: 12px 16px; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .month-nav { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 1.15rem; }
+    .btn-icon { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--text); padding: 6px; }
+
+    /* Drawer Menu (Trượt từ bên phải) */
+    .menu-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+    }
+    .menu-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .menu-drawer {
+      position: fixed; top: 0; right: -300px; width: 280px; height: 100%;
+      background: var(--card-bg); z-index: 300; box-shadow: -2px 0 10px rgba(0,0,0,0.15);
+      display: flex; flex-direction: column; padding: 20px; gap: 16px;
+      transition: right 0.25s ease;
+    }
+    .menu-drawer.active { right: 0; }
+
+    .menu-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+    .menu-title { font-weight: bold; font-size: 1.1rem; }
+    
+    /* Khu vực tài khoản trong Menu */
+    .user-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .user-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; }
+    .btn-auth {
+      width: 100%; background: var(--primary); color: #fff; border: none;
+      padding: 8px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;
+    }
+
+    /* Các mục trong menu */
+    .menu-group { display: flex; flex-direction: column; gap: 8px; }
+    .menu-label { font-size: 0.8rem; color: var(--subtext); font-weight: 600; text-transform: uppercase; }
+    .menu-item-btn {
+      display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px;
+      border-radius: 8px; border: 1px solid var(--border); background: var(--bg);
+      color: var(--text); font-size: 0.9rem; cursor: pointer; font-weight: 500;
+    }
+    .menu-search, .menu-select {
+      width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text); font-size: 0.9rem;
+    }
+
+    /* Timeline dạng cột */
+    .timeline { max-width: 600px; margin: 16px auto; padding: 0 12px; display: flex; flex-direction: column; gap: 8px; }
+    .day-card {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 16px; display: flex; gap: 14px; align-items: flex-start; cursor: pointer;
+      transition: transform 0.1s, border-color 0.2s;
+    }
+    .day-card:active { transform: scale(0.98); }
+    .day-card.today { border: 2px solid var(--primary); background: var(--highlight); }
+
+    .date-badge { display: flex; flex-direction: column; align-items: center; min-width: 40px; }
+    .date-num { font-size: 1.25rem; font-weight: bold; }
+    .date-weekday { font-size: 0.75rem; color: var(--subtext); }
+
+    .content-area { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .status-badge {
+      align-self: flex-start; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; color: #fff;
+    }
+    .status-empty { background: var(--tag-empty); }
+    .status-nursing { background: var(--tag-nursing); }
+    .status-lawson { background: var(--tag-lawson); }
+    .status-outing { background: var(--tag-outing); }
+
+    .note-text { font-size: 0.9rem; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+
+    /* Modal Chi tiết */
+    .modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      align-items: center; justify-content: center; z-index: 400; padding: 16px;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: var(--card-bg); border-radius: 16px; width: 100%; max-width: 400px;
+      padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 14px;
+    }
+    .modal-content select, .modal-content textarea {
+      width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text);
+    }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+    .btn { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-secondary { background: var(--border); color: var(--text); }
+  </style>
+</head>
+<body>
+
+  <!-- Header Đơn giản -->
+  <header>
+    <div class="month-nav">
+      <button class="btn-icon" onclick="changeMonth(-1)">◀</button>
+      <span id="currentMonthLabel">Tháng --/----</span>
+      <button class="btn-icon" onclick="changeMonth(1)">▶</button>
+    </div>
+    <button class="btn-icon" onclick="toggleMenu()" title="Mở Menu">☰</button>
+  </header>
+
+  <!-- Lưới Timeline -->
+  <main class="timeline" id="timelineContainer"></main>
+
+  <!-- Menu Drawer bên phải -->
+  <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+  <div class="menu-drawer" id="menuDrawer">
+    <div class="menu-header">
+      <span class="menu-title">Tùy Chọn & Cài Đặt</span>
+      <button class="btn-icon" onclick="toggleMenu()">✕</button>
+    </div>
+
+    <!-- Tài khoản & Đồng bộ Google -->
+    <div class="user-card">
+      <div id="userInfo" class="user-info">
+        <span>⚪ Đang dùng Offline</span>
+      </div>
+      <button id="authBtn" class="btn-auth" onclick="handleAuth()">Đăng nhập Google</button>
+    </div>
+
+    <!-- Tìm kiếm & Bộ lọc -->
+    <div class="menu-group">
+      <span class="menu-label">Tìm kiếm & Bộ lọc</span>
+      <input type="text" id="searchInput" class="menu-search" placeholder="🔍 Tìm ghi chú..." oninput="renderTimeline()">
+      <select id="filterStatus" class="menu-select" onchange="renderTimeline()">
+        <option value="all">Tất cả lịch</option>
+        <option value="empty">⚪ Trống</option>
+        <option value="nursing">🟢 Viện dưỡng lão</option>
+        <option value="lawson">🔵 Lawson</option>
+        <option value="outing">🧳 Đi chơi</option>
+      </select>
+    </div>
+
+    <!-- Tiện ích -->
+    <div class="menu-group">
+      <span class="menu-label">Cài đặt khác</span>
+      <button class="menu-item-btn" onclick="toggleTheme()">🌓 Đổi Giao Diện Sáng / Tối</button>
+      <button class="menu-item-btn" onclick="requestNotification()">🔔 Bật Nhắc Hẹn</button>
+      <button class="menu-item-btn" onclick="exportData()">📤 Xuất File Dự Phòng (.json)</button>
+      <button class="menu-item-btn" onclick="document.getElementById('importFile').click()">📥 Nhập File Dự Phòng (.json)</button>
+      <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
+    </div>
+  </div>
+
+  <!-- Modal Chi tiết ngày -->
+  <div class="modal" id="editModal">
+    <div class="modal-content">
+      <h3 id="modalDateLabel">Chi tiết ngày</h3>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Phân loại</label>
+        <select id="editType">
+          <option value="empty">⚪ Trống</option>
+          <option value="nursing">🟢 Viện dưỡng lão</option>
+          <option value="lawson">🔵 Lawson</option>
+          <option value="outing">🧳 Đi chơi</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Ghi chú chi tiết</label>
+        <textarea id="editNote" rows="3" placeholder="Nhập ghi chú (VD: Đi chơi ở ABC, Ca sáng...)"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveDayData()">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // CẤU HÌNH FIREBASE TỰ ĐỘNG
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4dt1u-HycuI3o_cJkz7DIIu3O3R0LLa4",
+      authDomain: "self-chedule.firebaseapp.com",
+      projectId: "self-chedule",
+      storageBucket: "self-chedule.firebasestorage.app",
+      messagingSenderId: "253003587609",
+      appId: "1:253003587609:web:f6ea16ac99de6fe869ca88",
+      measurementId: "G-TZ6V01F3N0"
+    };
+
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+    let unsubscribeSnapshot = null;
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      auth = firebase.auth();
+      db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log(err));
+    } catch (e) {
+      console.error("Lỗi Firebase:", e);
+    }
+
+    const statusMap = {
+      empty: { text: "Trống", class: "status-empty", icon: "⚪" },
+      nursing: { text: "Viện dưỡng lão", class: "status-nursing", icon: "🟢" },
+      lawson: { text: "Lawson", class: "status-lawson", icon: "🔵" },
+      outing: { text: "Đi chơi", class: "status-outing", icon: "🧳" }
+    };
+
+    let currentDate = new Date();
+    let eventsData = JSON.parse(localStorage.getItem("calendar_events") || "{}");
+    let selectedDateKey = null;
+
+    function toggleMenu() {
+      document.getElementById("menuOverlay").classList.toggle("active");
+      document.getElementById("menuDrawer").classList.toggle("active");
+    }
+
+    // Quản lý Đăng nhập Google
+    if (auth) {
+      auth.onAuthStateChanged(user => {
+        currentUser = user;
+        const userInfoDiv = document.getElementById("userInfo");
+        const authBtn = document.getElementById("authBtn");
+
+        if (user) {
+          userInfoDiv.innerHTML = `
+            <img src="${user.photoURL || 'https://via.placeholder.com/32'}" class="user-avatar" />
+            <span>${escapeHtml(user.displayName || user.email)}</span>
+          `;
+          authBtn.innerText = "Đăng xuất";
+          authBtn.style.background = "#ef4444";
+          listenToCloudChanges(user.uid);
+        } else {
+          userInfoDiv.innerHTML = `<span>⚪ Dùng Offline (Chưa đăng nhập)</span>`;
+          authBtn.innerText = "Đăng nhập Google";
+          authBtn.style.background = "var(--primary)";
+          if (unsubscribeSnapshot) unsubscribeSnapshot();
+        }
+      });
+    }
+
+    function handleAuth() {
+      if (!auth) return;
+      if (currentUser) {
+        auth.signOut();
+      } else {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).catch(error => {
+          if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+            auth.signInWithRedirect(provider);
+          } else {
+            alert("Lỗi đăng nhập: " + error.message);
+          }
+        });
+      }
+    }
+
+    function listenToCloudChanges(uid) {
+      if (!db) return;
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+      const userDocRef = db.collection("users").doc(uid);
+      unsubscribeSnapshot = userDocRef.onSnapshot(doc => {
+        if (doc.exists) {
+          const cloudData = doc.data().events || {};
+          eventsData = cloudData;
+          localStorage.setItem("calendar_events", JSON.stringify(eventsData));
+          renderTimeline();
+        } else {
+          userDocRef.set({ events: eventsData }, { merge: true });
+        }
+      }, err => console.log("Lỗi snapshot:", err));
+    }
+
+    function saveToStorage() {
+      localStorage.setItem("calendar_events", JSON.stringify(eventsData));
+      if (currentUser && db) {
+        db.collection("users").doc(currentUser.uid).set({
+          events: eventsData,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(err => console.error("Lỗi đồng bộ Cloud:", err));
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = document.body.getAttribute("data-theme") === "dark";
+      document.body.setAttribute("data-theme", isDark ? "light" : "dark");
+      localStorage.setItem("theme", isDark ? "light" : "dark");
+    }
+
+    if (localStorage.getItem("theme") === "dark") {
+      document.body.setAttribute("data-theme", "dark");
+    }
+
+    function changeMonth(offset) {
+      currentDate.setMonth(currentDate.getMonth() + offset);
+      renderTimeline();
+    }
+
+    function formatDateKey(year, month, day) {
+      return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+
+    function renderTimeline() {
+      const container = document.getElementById("timelineContainer");
+      container.innerHTML = "";
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      document.getElementById("currentMonthLabel").innerText = `Tháng ${String(month + 1).padStart(2, '0')}/${year}`;
+
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
+      const filterType = document.getElementById("filterStatus").value;
+
+      const now = new Date();
+      const todayStr = formatDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+      const weekdays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dateKey = formatDateKey(year, month, day);
+        const dayData = eventsData[dateKey] || { type: "empty", note: "" };
+        const dayOfWeek = weekdays[new Date(year, month, day).getDay()];
+
+        if (filterType !== "all" && dayData.type !== filterType) continue;
+        if (searchQuery && !dayData.note.toLowerCase().includes(searchQuery)) continue;
+
+        const card = document.createElement("div");
+        card.className = `day-card ${dateKey === todayStr ? "today" : ""}`;
+        card.onclick = () => openModal(dateKey, year, month, day);
+
+        const statusInfo = statusMap[dayData.type] || statusMap.empty;
+
+        card.innerHTML = `
+          <div class="date-badge">
+            <span class="date-num">${String(day).padStart(2, '0')}</span>
+            <span class="date-weekday">${dayOfWeek}</span>
+          </div>
+          <div class="content-area">
+            <div class="status-badge ${statusInfo.class}">${statusInfo.icon} ${statusInfo.text}</div>
+            ${dayData.note ? `<div class="note-text">${escapeHtml(dayData.note)}</div>` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function openModal(dateKey, y, m, d) {
+      selectedDateKey = dateKey;
+      document.getElementById("modalDateLabel").innerText = `Ngày ${d}/${m + 1}/${y}`;
+      const data = eventsData[dateKey] || { type: "empty", note: "" };
+      document.getElementById("editType").value = data.type;
+      document.getElementById("editNote").value = data.note;
+      document.getElementById("editModal").classList.add("active");
+    }
+
+    function closeModal() {
+      document.getElementById("editModal").classList.remove("active");
+    }
+
+    function saveDayData() {
+      if (!selectedDateKey) return;
+      const type = document.getElementById("editType").value;
+      const note = document.getElementById("editNote").value.trim();
+
+      if (type === "empty" && !note) {
+        delete eventsData[selectedDateKey];
+      } else {
+        eventsData[selectedDateKey] = { type, note };
+      }
+
+      saveToStorage();
+      closeModal();
+      renderTimeline();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.innerText = text;
+      return div.innerHTML;
+    }
+
+    function exportData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(eventsData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `calendar_backup_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          eventsData = JSON.parse(e.target.result);
+          saveToStorage();
+          renderTimeline();
+          alert("Nhập dữ liệu thành công!");
+        } catch (err) {
+          alert("File không hợp lệ!");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function requestNotification() {
+      if ("Notification" in window) {
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+            new Notification("Lịch Cá Nhân", { body: "Đã bật thông báo nhắc hẹn thành công!" });
+          }
+        });
+      }
+    }
+
+    renderTimeline();
+  </script>
+</body>
+</html>
