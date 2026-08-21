@@ -1,4 +1,4 @@
-code = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -104,6 +104,7 @@ code = """<!DOCTYPE html>
       display: flex; align-items: stretch; cursor: pointer; position: relative;
       transition: transform 0.1s, box-shadow 0.2s; overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05); min-height: 56px;
+      /* Ngăn lỗi cắt ngang thẻ khi xuất PDF */
       page-break-inside: avoid;
       break-inside: avoid;
     }
@@ -753,7 +754,7 @@ code = """<!DOCTYPE html>
       const note = document.getElementById("editNote").value.trim();
 
       if (type1 === "empty" && type2 === "none" && !note) {
-        delete eventsData[selectedDateKey];
+        eventsData[selectedDateKey] = { type1: "empty", type2: "none", note: "" };
       } else {
         eventsData[selectedDateKey] = { type1, type2, note };
       }
@@ -766,7 +767,7 @@ code = """<!DOCTYPE html>
     function deleteDayData() {
       if (!selectedDateKey) return;
       if (confirm("Bạn có chắc chắn muốn xóa trống lịch của ngày này không?")) {
-        delete eventsData[selectedDateKey];
+        eventsData[selectedDateKey] = { type1: "empty", type2: "none", note: "" };
         saveToStorage();
         closeModal();
         renderTimeline();
@@ -865,11 +866,11 @@ code = """<!DOCTYPE html>
 
           if (skipHolidays && holidayName) {
             const dateKey = formatDateKey(y, m, d);
-            delete eventsData[dateKey];
+            eventsData[dateKey] = { type1: "empty", type2: "none", note: "" };
           } else {
             const dateKey = formatDateKey(y, m, d);
             if (type1 === "empty" && type2 === "none" && !note) {
-              delete eventsData[dateKey];
+              eventsData[dateKey] = { type1: "empty", type2: "none", note: "" };
             } else {
               eventsData[dateKey] = { type1, type2, note };
             }
@@ -942,7 +943,7 @@ code = """<!DOCTYPE html>
         if (selectedWeekdays.includes(dayOfWeek)) {
           const dateKey = formatDateKey(y, m, d);
           if (eventsData[dateKey]) {
-            delete eventsData[dateKey];
+            eventsData[dateKey] = { type1: "empty", type2: "none", note: "" };
             count++;
           }
         }
@@ -1027,8 +1028,3 @@ code = """<!DOCTYPE html>
   </script>
 </body>
 </html>
-"""
-
-with open("index.html", "w", encoding="utf-8") as f:
-    f.write(code)
-print("Implemented Delete functionality (Single and Batch).")
