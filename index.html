@@ -22,8 +22,6 @@
       --border: #e2e8f0;
       --primary: #3b82f6;
       --highlight: #eff6ff;
-      --holiday-bg: #fff1f2;
-      --holiday-border: #fecdd3;
       --holiday-text: #e11d48;
       --tag-empty: #94a3b8;
       --tag-nursing: #10b981;
@@ -40,8 +38,6 @@
       --border: #334155;
       --primary: #60a5fa;
       --highlight: #1e3a8a;
-      --holiday-bg: #4c0519;
-      --holiday-border: #881337;
       --holiday-text: #fda4af;
     }
 
@@ -98,47 +94,54 @@
       background: var(--bg); color: var(--text); font-size: 0.9rem;
     }
 
-    /* Timeline dạng cột */
-    .timeline { max-width: 600px; margin: 16px auto; padding: 0 12px; display: flex; flex-direction: column; gap: 8px; }
+    /* Timeline dạng cột mới (Header màu) */
+    .timeline { max-width: 600px; margin: 16px auto; padding: 0 12px; display: flex; flex-direction: column; gap: 12px; }
+    
     .day-card {
       background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
-      padding: 12px 16px; display: flex; gap: 14px; align-items: flex-start; cursor: pointer;
-      transition: transform 0.1s, border-color 0.2s; position: relative;
+      display: flex; flex-direction: column; cursor: pointer; position: relative;
+      transition: transform 0.1s, box-shadow 0.2s; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .day-card:active { transform: scale(0.98); }
-    .day-card.today { border: 2px solid var(--primary); background: var(--highlight); }
+    .day-card.today { border: 2px solid var(--primary); }
     
-    /* Highlight Ngày Lễ Nhật Bản */
-    .day-card.holiday {
-      background: var(--holiday-bg);
-      border-color: var(--holiday-border);
+    /* Thiết kế phần Đầu (Header) của mỗi ngày */
+    .card-header {
+      padding: 8px 14px; display: flex; align-items: center; gap: 8px;
+      background: var(--bg); border-bottom: 1px solid var(--border);
     }
-    .day-card.holiday .date-num, .day-card.holiday .date-weekday {
-      color: var(--holiday-text);
-      font-weight: bold;
+    .card-header .date-num { font-size: 1.15rem; font-weight: bold; }
+    .card-header .date-weekday { font-size: 0.8rem; font-weight: 600; opacity: 0.8; }
+    .holiday-title { font-size: 0.75rem; font-weight: bold; margin-left: auto; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.05); }
+
+    /* Đổi màu phần Đầu theo loại lịch */
+    .day-card.type-school .card-header { background: var(--tag-school); color: #fff; border-bottom-color: var(--tag-school); }
+    .day-card.type-nursing .card-header { background: var(--tag-nursing); color: #fff; border-bottom-color: var(--tag-nursing); }
+    .day-card.type-lawson .card-header { background: var(--tag-lawson); color: #fff; border-bottom-color: var(--tag-lawson); }
+    .day-card.type-outing .card-header { background: var(--tag-outing); color: #fff; border-bottom-color: var(--tag-outing); }
+    
+    /* Ngày lễ (trống) thì hiện màu đỏ ở phần đầu */
+    .day-card.holiday.type-empty .card-header { background: var(--holiday-text); color: #fff; border-bottom-color: var(--holiday-text); }
+    
+    /* Tương phản cho chữ ngày lễ nếu phần đầu đã có màu */
+    .day-card[class*="type-"]:not(.type-empty) .holiday-title,
+    .day-card.holiday.type-empty .holiday-title {
+      background: rgba(255,255,255,0.25); color: #fff;
     }
 
-    .date-badge { display: flex; flex-direction: column; align-items: center; min-width: 42px; }
-    .date-num { font-size: 1.25rem; font-weight: bold; }
-    .date-weekday { font-size: 0.75rem; color: var(--subtext); }
-
-    .content-area { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-    .badges-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    /* Phần Nội dung */
+    .content-area { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
     .status-badge {
       align-self: flex-start; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; color: #fff;
     }
-    .status-empty { background: var(--tag-empty); }
+    .status-empty { display: none; /* Ẩn tag trống vì đã rõ ràng */ }
     .status-school { background: var(--tag-school); }
     .status-nursing { background: var(--tag-nursing); }
     .status-lawson { background: var(--tag-lawson); }
     .status-outing { background: var(--tag-outing); }
 
-    .holiday-badge {
-      background: var(--holiday-text); color: #fff; font-size: 0.7rem; font-weight: bold;
-      padding: 2px 6px; border-radius: 4px;
-    }
-
-    .note-text { font-size: 0.9rem; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+    .note-text { font-size: 0.9rem; color: var(--text); white-space: pre-wrap; word-break: break-word; line-height: 1.4; }
 
     /* Modal Chi tiết & Modal Batch */
     .modal {
@@ -493,21 +496,21 @@
         if (searchQuery && !dayData.note.toLowerCase().includes(searchQuery)) continue;
 
         const card = document.createElement("div");
-        card.className = `day-card ${dateKey === todayStr ? "today" : ""} ${holidayName ? "holiday" : ""}`;
+        // Gắn class type-... để CSS tự động đổ màu phần Header
+        card.className = `day-card ${dateKey === todayStr ? "today" : ""} ${holidayName ? "holiday" : ""} type-${dayData.type}`;
         card.onclick = () => openModal(dateKey, year, month, day);
 
         const statusInfo = statusMap[dayData.type] || statusMap.empty;
 
+        // Cấu trúc HTML mới: Tách riêng card-header và content-area
         card.innerHTML = `
-          <div class="date-badge">
+          <div class="card-header">
             <span class="date-num">${String(day).padStart(2, '0')}</span>
             <span class="date-weekday">${dayOfWeek}</span>
+            ${holidayName ? `<span class="holiday-title">🎌 ${holidayName}</span>` : ''}
           </div>
           <div class="content-area">
-            <div class="badges-row">
-              <div class="status-badge ${statusInfo.class}">${statusInfo.icon} ${statusInfo.text}</div>
-              ${holidayName ? `<div class="holiday-badge">🎌 ${holidayName}</div>` : ''}
-            </div>
+            ${dayData.type !== 'empty' ? `<div class="status-badge ${statusInfo.class}">${statusInfo.icon} ${statusInfo.text}</div>` : ''}
             ${dayData.note ? `<div class="note-text">${escapeHtml(dayData.note)}</div>` : ''}
           </div>
         `;
