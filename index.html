@@ -22,8 +22,8 @@
       --border: #e2e8f0;
       --primary: #3b82f6;
       --highlight: #eff6ff;
-      --holiday-text: #e11d48;
-      --tag-empty: #94a3b8;
+      --holiday-color: #e11d48;
+      --tag-empty: #64748b;
       --tag-nursing: #10b981;
       --tag-lawson: #0284c7;
       --tag-outing: #f59e0b;
@@ -38,7 +38,7 @@
       --border: #334155;
       --primary: #60a5fa;
       --highlight: #1e3a8a;
-      --holiday-text: #fda4af;
+      --holiday-color: #f43f5e;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -94,56 +94,58 @@
       background: var(--bg); color: var(--text); font-size: 0.9rem;
     }
 
-    /* Timeline dạng cột mới (Header màu) */
-    .timeline { max-width: 600px; margin: 16px auto; padding: 0 12px; display: flex; flex-direction: column; gap: 12px; }
+    /* Timeline dạng cột - Thiết kế ngang theo ảnh minh họa */
+    .timeline { max-width: 600px; margin: 16px auto; padding: 0 12px; display: flex; flex-direction: column; gap: 10px; }
     
     .day-card {
-      background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
-      display: flex; flex-direction: column; cursor: pointer; position: relative;
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+      display: flex; align-items: stretch; cursor: pointer; position: relative;
       transition: transform 0.1s, box-shadow 0.2s; overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05); min-height: 56px;
     }
     .day-card:active { transform: scale(0.98); }
     .day-card.today { border: 2px solid var(--primary); }
-    
-    /* Thiết kế phần Đầu (Header) của mỗi ngày */
-    .card-header {
-      padding: 8px 14px; display: flex; align-items: center; gap: 8px;
-      background: var(--bg); border-bottom: 1px solid var(--border);
+
+    /* Khối Màu Bên Trái (Header Block) */
+    .left-badge {
+      display: flex; align-items: center; color: #fff; background: var(--tag-empty);
+      min-width: 165px; max-width: 185px; flex-shrink: 0; padding: 6px 0;
     }
-    .card-header .date-num { font-size: 1.15rem; font-weight: bold; }
-    .card-header .date-weekday { font-size: 0.8rem; font-weight: 600; opacity: 0.8; }
-    .holiday-title { font-size: 0.75rem; font-weight: bold; margin-left: auto; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.05); }
-
-    /* Đổi màu phần Đầu theo loại lịch */
-    .day-card.type-school .card-header { background: var(--tag-school); color: #fff; border-bottom-color: var(--tag-school); }
-    .day-card.type-nursing .card-header { background: var(--tag-nursing); color: #fff; border-bottom-color: var(--tag-nursing); }
-    .day-card.type-lawson .card-header { background: var(--tag-lawson); color: #fff; border-bottom-color: var(--tag-lawson); }
-    .day-card.type-outing .card-header { background: var(--tag-outing); color: #fff; border-bottom-color: var(--tag-outing); }
-    
-    /* Ngày lễ (trống) thì hiện màu đỏ ở phần đầu */
-    .day-card.holiday.type-empty .card-header { background: var(--holiday-text); color: #fff; border-bottom-color: var(--holiday-text); }
-    
-    /* Tương phản cho chữ ngày lễ nếu phần đầu đã có màu */
-    .day-card[class*="type-"]:not(.type-empty) .holiday-title,
-    .day-card.holiday.type-empty .holiday-title {
-      background: rgba(255,255,255,0.25); color: #fff;
+    .date-section {
+      width: 55px; text-align: center; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; flex-shrink: 0;
     }
+    .date-num { font-size: 1.35rem; font-weight: bold; line-height: 1.1; font-family: "Times New Roman", Georgia, serif; }
+    .date-weekday { font-size: 0.85rem; font-weight: 600; }
 
-    /* Phần Nội dung */
-    .content-area { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
-    .status-badge {
-      align-self: flex-start; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; color: #fff;
+    .divider-line { width: 1px; background: rgba(255,255,255,0.4); align-self: stretch; margin: 2px 0; }
+
+    .info-section {
+      flex: 1; padding: 0 10px; display: flex; flex-direction: column;
+      justify-content: center; gap: 2px;
     }
-    .status-empty { display: none; /* Ẩn tag trống vì đã rõ ràng */ }
-    .status-school { background: var(--tag-school); }
-    .status-nursing { background: var(--tag-nursing); }
-    .status-lawson { background: var(--tag-lawson); }
-    .status-outing { background: var(--tag-outing); }
+    .info-icon { font-size: 0.9rem; line-height: 1; }
+    .info-title { font-size: 0.85rem; font-weight: 600; line-height: 1.2; }
+    .holiday-subtext { font-size: 0.7rem; font-weight: bold; color: #ffe4e6; line-height: 1.1; }
 
-    .note-text { font-size: 0.9rem; color: var(--text); white-space: pre-wrap; word-break: break-word; line-height: 1.4; }
+    /* Đổi màu Khối Bên Trái theo từng phân loại */
+    .day-card.type-nursing .left-badge { background: var(--tag-nursing); }
+    .day-card.type-lawson .left-badge { background: var(--tag-lawson); }
+    .day-card.type-school .left-badge { background: var(--tag-school); }
+    .day-card.type-outing .left-badge { background: var(--tag-outing); }
+    .day-card.type-empty .left-badge { background: var(--tag-empty); }
+    
+    /* Ngày lễ trống thì ưu tiên khối màu đỏ hồng */
+    .day-card.holiday.type-empty .left-badge { background: var(--holiday-color); }
 
-    /* Modal Chi tiết & Modal Batch */
+    /* Khối Ghi chú Bên Phải */
+    .note-section {
+      flex: 1; padding: 10px 14px; display: flex; align-items: center;
+      font-size: 0.9rem; color: var(--text); white-space: pre-wrap; word-break: break-word; line-height: 1.35;
+    }
+    .note-placeholder { color: var(--subtext); font-style: italic; font-size: 0.85rem; opacity: 0.7; }
+
+    /* Modal */
     .modal {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
       align-items: center; justify-content: center; z-index: 400; padding: 16px;
@@ -154,7 +156,7 @@
       padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 14px;
       max-height: 90vh; overflow-y: auto;
     }
-    .modal-content select, .modal-content textarea, .modal-content input[type="date"], .modal-content input[type="text"] {
+    .modal-content select, .modal-content textarea, .modal-content input[type="date"] {
       width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
       background: var(--bg); color: var(--text); font-size: 0.9rem;
     }
@@ -163,7 +165,6 @@
     .btn-primary { background: var(--primary); color: #fff; }
     .btn-secondary { background: var(--border); color: var(--text); }
 
-    /* Weekday selector for Batch Modal */
     .weekday-selector { display: flex; gap: 6px; justify-content: space-between; margin-top: 4px; }
     .weekday-checkbox { display: none; }
     .weekday-label {
@@ -198,7 +199,7 @@
       <button class="btn-icon" onclick="toggleMenu()">✕</button>
     </div>
 
-    <!-- Tài khoản & Đồng bộ Google -->
+    <!-- Tài khoản Google -->
     <div class="user-card">
       <div id="userInfo" class="user-info">
         <span>⚪ Đang dùng Offline</span>
@@ -253,7 +254,7 @@
       </div>
       <div>
         <label style="font-size: 0.8rem; color: var(--subtext);">Ghi chú chi tiết</label>
-        <textarea id="editNote" rows="3" placeholder="Nhập ghi chú (VD: Lịch học Care, Ca sáng, Đi chơi...)"></textarea>
+        <textarea id="editNote" rows="3" placeholder="Nhập ghi chú chi tiết..."></textarea>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal()">Hủy</button>
@@ -262,7 +263,7 @@
     </div>
   </div>
 
-  <!-- Modal Thêm Hàng Loạt (Batch) -->
+  <!-- Modal Thêm Hàng Loạt -->
   <div class="modal" id="batchModal">
     <div class="modal-content">
       <h3>Thêm Lịch Hàng Loạt</h3>
@@ -298,7 +299,7 @@
       </div>
       <div>
         <label style="font-size: 0.8rem; color: var(--subtext);">Ghi chú chung (tùy chọn)</label>
-        <textarea id="batchNote" rows="2" placeholder="VD: Học trên trường (để trống nếu không cần ghi chú)"></textarea>
+        <textarea id="batchNote" rows="2" placeholder="Ghi chú chung..."></textarea>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeBatchModal()">Hủy</button>
@@ -333,11 +334,11 @@
     }
 
     const statusMap = {
-      empty: { text: "Trống", class: "status-empty", icon: "⚪" },
-      school: { text: "Đi học", class: "status-school", icon: "📖" },
-      nursing: { text: "Viện dưỡng lão", class: "status-nursing", icon: "🟢" },
-      lawson: { text: "Lawson", class: "status-lawson", icon: "🔵" },
-      outing: { text: "Đi chơi", class: "status-outing", icon: "🧳" }
+      empty: { text: "Trống", icon: "⚪" },
+      school: { text: "Đi học", icon: "📖" },
+      nursing: { text: "Viện dưỡng lão", icon: "🟢" },
+      lawson: { text: "Lawson", icon: "🔵" },
+      outing: { text: "Đi chơi", icon: "🧳" }
     };
 
     // Tính ngày nghỉ lễ Nhật Bản
@@ -496,22 +497,27 @@
         if (searchQuery && !dayData.note.toLowerCase().includes(searchQuery)) continue;
 
         const card = document.createElement("div");
-        // Gắn class type-... để CSS tự động đổ màu phần Header
         card.className = `day-card ${dateKey === todayStr ? "today" : ""} ${holidayName ? "holiday" : ""} type-${dayData.type}`;
         card.onclick = () => openModal(dateKey, year, month, day);
 
         const statusInfo = statusMap[dayData.type] || statusMap.empty;
 
-        // Cấu trúc HTML mới: Tách riêng card-header và content-area
+        // Bố cục chính xác theo ảnh minh họa
         card.innerHTML = `
-          <div class="card-header">
-            <span class="date-num">${String(day).padStart(2, '0')}</span>
-            <span class="date-weekday">${dayOfWeek}</span>
-            ${holidayName ? `<span class="holiday-title">🎌 ${holidayName}</span>` : ''}
+          <div class="left-badge">
+            <div class="date-section">
+              <span class="date-num">${String(day).padStart(2, '0')}</span>
+              <span class="date-weekday">${dayOfWeek}</span>
+            </div>
+            <div class="divider-line"></div>
+            <div class="info-section">
+              <span class="info-icon">${statusInfo.icon}</span>
+              <span class="info-title">${statusInfo.text}</span>
+              ${holidayName ? `<span class="holiday-subtext">🎌 ${holidayName}</span>` : ''}
+            </div>
           </div>
-          <div class="content-area">
-            ${dayData.type !== 'empty' ? `<div class="status-badge ${statusInfo.class}">${statusInfo.icon} ${statusInfo.text}</div>` : ''}
-            ${dayData.note ? `<div class="note-text">${escapeHtml(dayData.note)}</div>` : ''}
+          <div class="note-section">
+            ${dayData.note ? escapeHtml(dayData.note) : '<span class="note-placeholder"></span>'}
           </div>
         `;
         container.appendChild(card);
