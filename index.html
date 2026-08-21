@@ -104,6 +104,9 @@
       display: flex; align-items: stretch; cursor: pointer; position: relative;
       transition: transform 0.1s, box-shadow 0.2s; overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05); min-height: 56px;
+      /* Ngăn lỗi cắt ngang thẻ khi xuất PDF */
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
     .day-card:active { transform: scale(0.98); }
     .day-card.today { border: 2px solid var(--primary); }
@@ -885,7 +888,8 @@
           filename:     `Lich_${monthLabel}.pdf`,
           image:        { type: 'jpeg', quality: 0.98 },
           html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak:    { mode: 'css', before: '#page2el' }
         };
 
         html2pdf().set(opt).from(element).save().then(() => {
