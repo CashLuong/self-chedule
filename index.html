@@ -22,10 +22,14 @@
       --border: #e2e8f0;
       --primary: #3b82f6;
       --highlight: #eff6ff;
+      --holiday-bg: #fff1f2;
+      --holiday-border: #fecdd3;
+      --holiday-text: #e11d48;
       --tag-empty: #94a3b8;
       --tag-nursing: #10b981;
       --tag-lawson: #0284c7;
       --tag-outing: #f59e0b;
+      --tag-school: #8b5cf6;
     }
 
     [data-theme="dark"] {
@@ -36,12 +40,15 @@
       --border: #334155;
       --primary: #60a5fa;
       --highlight: #1e3a8a;
+      --holiday-bg: #4c0519;
+      --holiday-border: #881337;
+      --holiday-text: #fda4af;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding-bottom: 20px; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 30px; }
 
-    /* Header tối giản */
+    /* Header */
     header {
       position: sticky; top: 0; background: var(--card-bg); border-bottom: 1px solid var(--border);
       padding: 12px 16px; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -50,7 +57,7 @@
     .month-nav { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 1.15rem; }
     .btn-icon { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--text); padding: 6px; }
 
-    /* Drawer Menu (Trượt từ bên phải) */
+    /* Drawer Menu */
     .menu-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250;
       opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
@@ -58,17 +65,16 @@
     .menu-overlay.active { opacity: 1; pointer-events: auto; }
 
     .menu-drawer {
-      position: fixed; top: 0; right: -300px; width: 280px; height: 100%;
+      position: fixed; top: 0; right: -320px; width: 300px; height: 100%;
       background: var(--card-bg); z-index: 300; box-shadow: -2px 0 10px rgba(0,0,0,0.15);
       display: flex; flex-direction: column; padding: 20px; gap: 16px;
-      transition: right 0.25s ease;
+      transition: right 0.25s ease; overflow-y: auto;
     }
     .menu-drawer.active { right: 0; }
 
     .menu-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
     .menu-title { font-weight: bold; font-size: 1.1rem; }
     
-    /* Khu vực tài khoản trong Menu */
     .user-card {
       background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
       padding: 12px; display: flex; flex-direction: column; gap: 10px;
@@ -80,7 +86,6 @@
       padding: 8px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;
     }
 
-    /* Các mục trong menu */
     .menu-group { display: flex; flex-direction: column; gap: 8px; }
     .menu-label { font-size: 0.8rem; color: var(--subtext); font-weight: 600; text-transform: uppercase; }
     .menu-item-btn {
@@ -98,49 +103,78 @@
     .day-card {
       background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
       padding: 12px 16px; display: flex; gap: 14px; align-items: flex-start; cursor: pointer;
-      transition: transform 0.1s, border-color 0.2s;
+      transition: transform 0.1s, border-color 0.2s; position: relative;
     }
     .day-card:active { transform: scale(0.98); }
     .day-card.today { border: 2px solid var(--primary); background: var(--highlight); }
+    
+    /* Highlight Ngày Lễ Nhật Bản */
+    .day-card.holiday {
+      background: var(--holiday-bg);
+      border-color: var(--holiday-border);
+    }
+    .day-card.holiday .date-num, .day-card.holiday .date-weekday {
+      color: var(--holiday-text);
+      font-weight: bold;
+    }
 
-    .date-badge { display: flex; flex-direction: column; align-items: center; min-width: 40px; }
+    .date-badge { display: flex; flex-direction: column; align-items: center; min-width: 42px; }
     .date-num { font-size: 1.25rem; font-weight: bold; }
     .date-weekday { font-size: 0.75rem; color: var(--subtext); }
 
     .content-area { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .badges-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
     .status-badge {
       align-self: flex-start; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; color: #fff;
     }
     .status-empty { background: var(--tag-empty); }
+    .status-school { background: var(--tag-school); }
     .status-nursing { background: var(--tag-nursing); }
     .status-lawson { background: var(--tag-lawson); }
     .status-outing { background: var(--tag-outing); }
 
+    .holiday-badge {
+      background: var(--holiday-text); color: #fff; font-size: 0.7rem; font-weight: bold;
+      padding: 2px 6px; border-radius: 4px;
+    }
+
     .note-text { font-size: 0.9rem; color: var(--text); white-space: pre-wrap; word-break: break-word; }
 
-    /* Modal Chi tiết */
+    /* Modal Chi tiết & Modal Batch */
     .modal {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
       align-items: center; justify-content: center; z-index: 400; padding: 16px;
     }
     .modal.active { display: flex; }
     .modal-content {
-      background: var(--card-bg); border-radius: 16px; width: 100%; max-width: 400px;
+      background: var(--card-bg); border-radius: 16px; width: 100%; max-width: 420px;
       padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 14px;
+      max-height: 90vh; overflow-y: auto;
     }
-    .modal-content select, .modal-content textarea {
+    .modal-content select, .modal-content textarea, .modal-content input[type="date"], .modal-content input[type="text"] {
       width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--bg); color: var(--text);
+      background: var(--bg); color: var(--text); font-size: 0.9rem;
     }
     .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
     .btn { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
     .btn-primary { background: var(--primary); color: #fff; }
     .btn-secondary { background: var(--border); color: var(--text); }
+
+    /* Weekday selector for Batch Modal */
+    .weekday-selector { display: flex; gap: 6px; justify-content: space-between; margin-top: 4px; }
+    .weekday-checkbox { display: none; }
+    .weekday-label {
+      flex: 1; text-align: center; padding: 6px 0; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--bg); font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    }
+    .weekday-checkbox:checked + .weekday-label {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+    }
   </style>
 </head>
 <body>
 
-  <!-- Header Đơn giản -->
+  <!-- Header -->
   <header>
     <div class="month-nav">
       <button class="btn-icon" onclick="changeMonth(-1)">◀</button>
@@ -169,6 +203,12 @@
       <button id="authBtn" class="btn-auth" onclick="handleAuth()">Đăng nhập Google</button>
     </div>
 
+    <!-- Thêm hàng loạt -->
+    <div class="menu-group">
+      <span class="menu-label">Công cụ nhanh</span>
+      <button class="menu-item-btn" onclick="openBatchModal()" style="background: var(--primary); color: #fff; border: none;">⚡ Thêm lịch hàng loạt</button>
+    </div>
+
     <!-- Tìm kiếm & Bộ lọc -->
     <div class="menu-group">
       <span class="menu-label">Tìm kiếm & Bộ lọc</span>
@@ -176,6 +216,7 @@
       <select id="filterStatus" class="menu-select" onchange="renderTimeline()">
         <option value="all">Tất cả lịch</option>
         <option value="empty">⚪ Trống</option>
+        <option value="school">📖 Đi học</option>
         <option value="nursing">🟢 Viện dưỡng lão</option>
         <option value="lawson">🔵 Lawson</option>
         <option value="outing">🧳 Đi chơi</option>
@@ -201,6 +242,7 @@
         <label style="font-size: 0.8rem; color: var(--subtext);">Phân loại</label>
         <select id="editType">
           <option value="empty">⚪ Trống</option>
+          <option value="school">📖 Đi học</option>
           <option value="nursing">🟢 Viện dưỡng lão</option>
           <option value="lawson">🔵 Lawson</option>
           <option value="outing">🧳 Đi chơi</option>
@@ -208,7 +250,7 @@
       </div>
       <div>
         <label style="font-size: 0.8rem; color: var(--subtext);">Ghi chú chi tiết</label>
-        <textarea id="editNote" rows="3" placeholder="Nhập ghi chú (VD: Đi chơi ở ABC, Ca sáng...)"></textarea>
+        <textarea id="editNote" rows="3" placeholder="Nhập ghi chú (VD: Lịch học Care, Ca sáng, Đi chơi...)"></textarea>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal()">Hủy</button>
@@ -217,10 +259,52 @@
     </div>
   </div>
 
+  <!-- Modal Thêm Hàng Loạt (Batch) -->
+  <div class="modal" id="batchModal">
+    <div class="modal-content">
+      <h3>Thêm Lịch Hàng Loạt</h3>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Từ ngày</label>
+        <input type="date" id="batchStartDate">
+      </div>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Đến ngày</label>
+        <input type="date" id="batchEndDate">
+      </div>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Áp dụng cho các thứ trong tuần</label>
+        <div class="weekday-selector">
+          <input type="checkbox" id="w1" class="weekday-checkbox" checked><label for="w1" class="weekday-label">T2</label>
+          <input type="checkbox" id="w2" class="weekday-checkbox" checked><label for="w2" class="weekday-label">T3</label>
+          <input type="checkbox" id="w3" class="weekday-checkbox" checked><label for="w3" class="weekday-label">T4</label>
+          <input type="checkbox" id="w4" class="weekday-checkbox" checked><label for="w4" class="weekday-label">T5</label>
+          <input type="checkbox" id="w5" class="weekday-checkbox" checked><label for="w5" class="weekday-label">T6</label>
+          <input type="checkbox" id="w6" class="weekday-checkbox"><label for="w6" class="weekday-label">T7</label>
+          <input type="checkbox" id="w0" class="weekday-checkbox"><label for="w0" class="weekday-label">CN</label>
+        </div>
+      </div>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Phân loại</label>
+        <select id="batchType">
+          <option value="school">📖 Đi học</option>
+          <option value="nursing">🟢 Viện dưỡng lão</option>
+          <option value="lawson">🔵 Lawson</option>
+          <option value="outing">🧳 Đi chơi</option>
+          <option value="empty">⚪ Xóa về Trống</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Ghi chú chung (tùy chọn)</label>
+        <textarea id="batchNote" rows="2" placeholder="VD: Học trên trường (để trống nếu không cần ghi chú)"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeBatchModal()">Hủy</button>
+        <button class="btn btn-primary" onclick="applyBatchSchedule()">Áp dụng</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // ==========================================
-    // CẤU HÌNH FIREBASE TỰ ĐỘNG
-    // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyD4dt1u-HycuI3o_cJkz7DIIu3O3R0LLa4",
       authDomain: "self-chedule.firebaseapp.com",
@@ -247,10 +331,47 @@
 
     const statusMap = {
       empty: { text: "Trống", class: "status-empty", icon: "⚪" },
+      school: { text: "Đi học", class: "status-school", icon: "📖" },
       nursing: { text: "Viện dưỡng lão", class: "status-nursing", icon: "🟢" },
       lawson: { text: "Lawson", class: "status-lawson", icon: "🔵" },
       outing: { text: "Đi chơi", class: "status-outing", icon: "🧳" }
     };
+
+    // Tính ngày nghỉ lễ Nhật Bản
+    function getJapanHolidayName(year, month, day) {
+      const m = month + 1;
+      const d = day;
+      const dObj = new Date(year, month, day);
+      const dayOfWeek = dObj.getDay();
+      const nthMonday = Math.ceil(d / 7);
+
+      if (m === 1 && d === 1) return "Tết Dương lịch (元日)";
+      if (m === 2 && d === 11) return "Quốc khánh (建国記念の日)";
+      if (m === 2 && d === 23) return "Sinh nhật Nhật Hoàng (天皇誕生日)";
+      if (m === 4 && d === 29) return "Ngày Chiêu Hòa (昭和の日)";
+      if (m === 5 && d === 3) return "Ngày Hiến pháp (憲法記念日)";
+      if (m === 5 && d === 4) return "Ngày Cây xanh (みどりの日)";
+      if (m === 5 && d === 5) return "Tết Thiếu nhi (こどもの日)";
+      if (m === 8 && d === 11) return "Ngày Núi (山の日)";
+      if (m === 11 && d === 3) return "Ngày Văn hóa (文化の日)";
+      if (m === 11 && d === 23) return "Ngày Cảm tạ lao động (勤労感謝の日)";
+
+      if (m === 1 && dayOfWeek === 1 && nthMonday === 2) return "Lễ Thành nhân (成人の日)";
+      if (m === 7 && dayOfWeek === 1 && nthMonday === 3) return "Ngày của Biển (海の日)";
+      if (m === 9 && dayOfWeek === 1 && nthMonday === 3) return "Ngày Kính lão (敬老の日)";
+      if (m === 10 && dayOfWeek === 1 && nthMonday === 2) return "Ngày Thể thao (スポーツの日)";
+
+      if (m === 3 && d === Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4))) return "Xuân phân (春分の日)";
+      if (m === 9 && d === Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4))) return "Thu phân (秋分の日)";
+
+      if (dayOfWeek === 1) {
+        const prevDay = new Date(year, month, day - 1);
+        const prevHoliday = getJapanHolidayName(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate());
+        if (prevHoliday && !prevHoliday.includes("Nghỉ bù")) return `Nghỉ bù (${prevHoliday})`;
+      }
+
+      return null;
+    }
 
     let currentDate = new Date();
     let eventsData = JSON.parse(localStorage.getItem("calendar_events") || "{}");
@@ -261,7 +382,6 @@
       document.getElementById("menuDrawer").classList.toggle("active");
     }
 
-    // Quản lý Đăng nhập Google
     if (auth) {
       auth.onAuthStateChanged(user => {
         currentUser = user;
@@ -367,12 +487,13 @@
         const dateKey = formatDateKey(year, month, day);
         const dayData = eventsData[dateKey] || { type: "empty", note: "" };
         const dayOfWeek = weekdays[new Date(year, month, day).getDay()];
+        const holidayName = getJapanHolidayName(year, month, day);
 
         if (filterType !== "all" && dayData.type !== filterType) continue;
         if (searchQuery && !dayData.note.toLowerCase().includes(searchQuery)) continue;
 
         const card = document.createElement("div");
-        card.className = `day-card ${dateKey === todayStr ? "today" : ""}`;
+        card.className = `day-card ${dateKey === todayStr ? "today" : ""} ${holidayName ? "holiday" : ""}`;
         card.onclick = () => openModal(dateKey, year, month, day);
 
         const statusInfo = statusMap[dayData.type] || statusMap.empty;
@@ -383,7 +504,10 @@
             <span class="date-weekday">${dayOfWeek}</span>
           </div>
           <div class="content-area">
-            <div class="status-badge ${statusInfo.class}">${statusInfo.icon} ${statusInfo.text}</div>
+            <div class="badges-row">
+              <div class="status-badge ${statusInfo.class}">${statusInfo.icon} ${statusInfo.text}</div>
+              ${holidayName ? `<div class="holiday-badge">🎌 ${holidayName}</div>` : ''}
+            </div>
             ${dayData.note ? `<div class="note-text">${escapeHtml(dayData.note)}</div>` : ''}
           </div>
         `;
@@ -418,6 +542,71 @@
       saveToStorage();
       closeModal();
       renderTimeline();
+    }
+
+    function openBatchModal() {
+      toggleMenu();
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const firstDay = formatDateKey(year, month, 1);
+      const lastDay = formatDateKey(year, month, new Date(year, month + 1, 0).getDate());
+      
+      document.getElementById("batchStartDate").value = firstDay;
+      document.getElementById("batchEndDate").value = lastDay;
+      document.getElementById("batchModal").classList.add("active");
+    }
+
+    function closeBatchModal() {
+      document.getElementById("batchModal").classList.remove("active");
+    }
+
+    function applyBatchSchedule() {
+      const startVal = document.getElementById("batchStartDate").value;
+      const endVal = document.getElementById("batchEndDate").value;
+      const type = document.getElementById("batchType").value;
+      const note = document.getElementById("batchNote").value.trim();
+
+      if (!startVal || !endVal) {
+        alert("Vui lòng chọn ngày bắt đầu và ngày kết thúc!");
+        return;
+      }
+
+      const startDate = new Date(startVal);
+      const endDate = new Date(endVal);
+
+      if (startDate > endDate) {
+        alert("Ngày bắt đầu không được lớn hơn ngày kết thúc!");
+        return;
+      }
+
+      const selectedWeekdays = [];
+      for (let i = 0; i <= 6; i++) {
+        if (document.getElementById(`w${i}`).checked) {
+          selectedWeekdays.push(i);
+        }
+      }
+
+      let curr = new Date(startDate);
+      let count = 0;
+
+      while (curr <= endDate) {
+        const dayOfWeek = curr.getDay();
+        if (selectedWeekdays.includes(dayOfWeek)) {
+          const dateKey = formatDateKey(curr.getFullYear(), curr.getMonth(), curr.getDate());
+          if (type === "empty" && !note) {
+            delete eventsData[dateKey];
+          } else {
+            eventsData[dateKey] = { type, note };
+          }
+          count++;
+        }
+        curr.setDate(curr.getDate() + 1);
+      }
+
+      saveToStorage();
+      closeBatchModal();
+      renderTimeline();
+      alert(`Đã cập nhật thành công ${count} ngày!`);
     }
 
     function escapeHtml(text) {
