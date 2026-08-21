@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+code = """<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -104,7 +104,6 @@
       display: flex; align-items: stretch; cursor: pointer; position: relative;
       transition: transform 0.1s, box-shadow 0.2s; overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05); min-height: 56px;
-      /* Ngăn lỗi cắt ngang thẻ khi xuất PDF */
       page-break-inside: avoid;
       break-inside: avoid;
     }
@@ -207,7 +206,7 @@
     <button class="btn-icon" onclick="toggleMenu()" title="Mở Menu">☰</button>
   </header>
 
-  <!-- Lưới Timeline (Bọc thêm div wrapper để in PDF đẹp hơn) -->
+  <!-- Lưới Timeline -->
   <div id="pdfWrapper" style="background: var(--bg); min-height: 100vh;">
     <main class="timeline" id="timelineContainer"></main>
   </div>
@@ -232,6 +231,7 @@
     <div class="menu-group">
       <span class="menu-label">Công cụ nhanh</span>
       <button class="menu-item-btn" onclick="openBatchModal()" style="background: var(--primary); color: #fff; border: none;">⚡ Thêm lịch hàng loạt</button>
+      <button class="menu-item-btn" onclick="openBatchDeleteModal()" style="background: #f97316; color: #fff; border: none;">🗑 Xóa lịch hàng loạt</button>
       <button class="menu-item-btn" onclick="openAddCategoryModal()" style="background: var(--tag-nursing); color: #fff; border: none;">➕ Thêm mục mới</button>
       <button class="menu-item-btn" onclick="exportPDF()" style="background: #ef4444; color: #fff; border: none;">📄 Xuất Lịch ra PDF</button>
     </div>
@@ -276,9 +276,12 @@
         <label style="font-size: 0.8rem; color: var(--subtext);">Ghi chú chi tiết</label>
         <textarea id="editNote" rows="3" placeholder="Nhập ghi chú chi tiết..."></textarea>
       </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal()">Hủy</button>
-        <button class="btn btn-primary" onclick="saveDayData()">Lưu</button>
+      <div class="modal-actions" style="justify-content: space-between;">
+        <button class="btn" style="background: #ef4444; color: #fff;" onclick="deleteDayData()">🗑 Xóa</button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary" onclick="closeModal()">Hủy</button>
+          <button class="btn btn-primary" onclick="saveDayData()">Lưu</button>
+        </div>
       </div>
     </div>
   </div>
@@ -330,6 +333,37 @@
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeBatchModal()">Hủy</button>
         <button class="btn btn-primary" onclick="applyBatchSchedule()">Áp dụng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Xóa Hàng Loạt -->
+  <div class="modal" id="batchDeleteModal">
+    <div class="modal-content">
+      <h3>Xóa Lịch Hàng Loạt</h3>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Từ ngày</label>
+        <input type="date" id="batchDelStartDate">
+      </div>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Đến ngày</label>
+        <input type="date" id="batchDelEndDate">
+      </div>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Chỉ xóa các thứ sau</label>
+        <div class="weekday-selector">
+          <input type="checkbox" id="dw1" class="weekday-checkbox" checked><label for="dw1" class="weekday-label">T2</label>
+          <input type="checkbox" id="dw2" class="weekday-checkbox" checked><label for="dw2" class="weekday-label">T3</label>
+          <input type="checkbox" id="dw3" class="weekday-checkbox" checked><label for="dw3" class="weekday-label">T4</label>
+          <input type="checkbox" id="dw4" class="weekday-checkbox" checked><label for="dw4" class="weekday-label">T5</label>
+          <input type="checkbox" id="dw5" class="weekday-checkbox" checked><label for="dw5" class="weekday-label">T6</label>
+          <input type="checkbox" id="dw6" class="weekday-checkbox" checked><label for="dw6" class="weekday-label">T7</label>
+          <input type="checkbox" id="dw0" class="weekday-checkbox" checked><label for="dw0" class="weekday-label">CN</label>
+        </div>
+      </div>
+      <div class="modal-actions" style="justify-content: space-between;">
+        <button class="btn btn-secondary" onclick="closeBatchDeleteModal()">Hủy</button>
+        <button class="btn" style="background: #ef4444; color: #fff;" onclick="executeBatchDelete()">🗑 Xác nhận Xóa</button>
       </div>
     </div>
   </div>
@@ -729,6 +763,16 @@
       renderTimeline();
     }
 
+    function deleteDayData() {
+      if (!selectedDateKey) return;
+      if (confirm("Bạn có chắc chắn muốn xóa trống lịch của ngày này không?")) {
+        delete eventsData[selectedDateKey];
+        saveToStorage();
+        closeModal();
+        renderTimeline();
+      }
+    }
+
     /* Modal Thêm Mục Mới */
     function openAddCategoryModal() {
       toggleMenu();
@@ -841,6 +885,76 @@
       alert(`Đã cập nhật xong! (${count} ngày đã được đặt lịch).`);
     }
 
+    /* Modal Xóa Hàng Loạt */
+    function openBatchDeleteModal() {
+      toggleMenu();
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const firstDay = formatDateKey(year, month, 1);
+      const lastDay = formatDateKey(year, month, new Date(year, month + 1, 0).getDate());
+      
+      document.getElementById("batchDelStartDate").value = firstDay;
+      document.getElementById("batchDelEndDate").value = lastDay;
+      document.getElementById("batchDeleteModal").classList.add("active");
+    }
+
+    function closeBatchDeleteModal() {
+      document.getElementById("batchDeleteModal").classList.remove("active");
+    }
+
+    function executeBatchDelete() {
+      const startVal = document.getElementById("batchDelStartDate").value;
+      const endVal = document.getElementById("batchDelEndDate").value;
+
+      if (!startVal || !endVal) {
+        alert("Vui lòng chọn ngày bắt đầu và kết thúc!");
+        return;
+      }
+
+      const startDate = new Date(startVal);
+      const endDate = new Date(endVal);
+
+      if (startDate > endDate) {
+        alert("Ngày bắt đầu không được lớn hơn ngày kết thúc!");
+        return;
+      }
+
+      if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa trống toàn bộ lịch trong khoảng thời gian và các thứ đã chọn không? Hành động này không thể hoàn tác!")) {
+        return;
+      }
+
+      const selectedWeekdays = [];
+      for (let i = 0; i <= 6; i++) {
+        if (document.getElementById(`dw${i}`).checked) {
+          selectedWeekdays.push(i);
+        }
+      }
+
+      let curr = new Date(startDate);
+      let count = 0;
+
+      while (curr <= endDate) {
+        const y = curr.getFullYear();
+        const m = curr.getMonth();
+        const d = curr.getDate();
+        const dayOfWeek = curr.getDay();
+
+        if (selectedWeekdays.includes(dayOfWeek)) {
+          const dateKey = formatDateKey(y, m, d);
+          if (eventsData[dateKey]) {
+            delete eventsData[dateKey];
+            count++;
+          }
+        }
+        curr.setDate(curr.getDate() + 1);
+      }
+
+      saveToStorage();
+      closeBatchDeleteModal();
+      renderTimeline();
+      alert(`Đã dọn dẹp sạch sẽ lịch của ${count} ngày!`);
+    }
+
     function escapeHtml(text) {
       const div = document.createElement("div");
       div.innerText = text;
@@ -913,3 +1027,8 @@
   </script>
 </body>
 </html>
+"""
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(code)
+print("Implemented Delete functionality (Single and Batch).")
