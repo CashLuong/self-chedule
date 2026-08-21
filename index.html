@@ -12,6 +12,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  
+  <!-- html2pdf SDK -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
     :root {
@@ -160,7 +163,7 @@
       padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 14px;
       max-height: 90vh; overflow-y: auto;
     }
-    .modal-content select, .modal-content textarea, .modal-content input[type="date"] {
+    .modal-content select, .modal-content textarea, .modal-content input[type="date"], .modal-content input[type="text"] {
       width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
       background: var(--bg); color: var(--text); font-size: 0.9rem;
     }
@@ -184,13 +187,10 @@
     }
     .checkbox-holiday-wrapper input { width: 18px; height: 18px; cursor: pointer; }
 
-    .slot-row {
-      display: flex; gap: 10px;
-    }
-    .slot-col {
-      flex: 1;
-    }
+    .slot-row { display: flex; gap: 10px; }
+    .slot-col { flex: 1; }
   </style>
+  <style id="dynamicStyles"></style>
 </head>
 <body>
 
@@ -204,8 +204,10 @@
     <button class="btn-icon" onclick="toggleMenu()" title="Mở Menu">☰</button>
   </header>
 
-  <!-- Lưới Timeline -->
-  <main class="timeline" id="timelineContainer"></main>
+  <!-- Lưới Timeline (Bọc thêm div wrapper để in PDF đẹp hơn) -->
+  <div id="pdfWrapper" style="background: var(--bg); min-height: 100vh;">
+    <main class="timeline" id="timelineContainer"></main>
+  </div>
 
   <!-- Menu Drawer bên phải -->
   <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
@@ -223,10 +225,12 @@
       <button id="authBtn" class="btn-auth" onclick="handleAuth()">Đăng nhập Google</button>
     </div>
 
-    <!-- Thêm hàng loạt -->
+    <!-- Công cụ nhanh -->
     <div class="menu-group">
       <span class="menu-label">Công cụ nhanh</span>
       <button class="menu-item-btn" onclick="openBatchModal()" style="background: var(--primary); color: #fff; border: none;">⚡ Thêm lịch hàng loạt</button>
+      <button class="menu-item-btn" onclick="openAddCategoryModal()" style="background: var(--tag-nursing); color: #fff; border: none;">➕ Thêm mục mới</button>
+      <button class="menu-item-btn" onclick="exportPDF()" style="background: #ef4444; color: #fff; border: none;">📄 Xuất Lịch ra PDF</button>
     </div>
 
     <!-- Tìm kiếm & Bộ lọc -->
@@ -234,12 +238,7 @@
       <span class="menu-label">Tìm kiếm & Bộ lọc</span>
       <input type="text" id="searchInput" class="menu-search" placeholder="🔍 Tìm ghi chú..." oninput="renderTimeline()">
       <select id="filterStatus" class="menu-select" onchange="renderTimeline()">
-        <option value="all">Tất cả lịch</option>
-        <option value="empty">⚪ Trống</option>
-        <option value="school">📖 Đi học</option>
-        <option value="nursing">🟢 Viện dưỡng lão</option>
-        <option value="lawson">🔵 Lawson</option>
-        <option value="outing">🧳 Đi chơi</option>
+        <!-- Được JS render động -->
       </select>
     </div>
 
@@ -254,7 +253,7 @@
     </div>
   </div>
 
-  <!-- Modal Chi tiết ngày (2 Mục) -->
+  <!-- Modal Chi tiết ngày -->
   <div class="modal" id="editModal">
     <div class="modal-content">
       <h3 id="modalDateLabel">Chi tiết ngày</h3>
@@ -262,23 +261,11 @@
       <div class="slot-row">
         <div class="slot-col">
           <label style="font-size: 0.8rem; color: var(--subtext);">Mục 1 (Sáng / Chính)</label>
-          <select id="editType1">
-            <option value="empty">⚪ Trống</option>
-            <option value="school">📖 Đi học</option>
-            <option value="nursing">🟢 Viện dưỡng lão</option>
-            <option value="lawson">🔵 Lawson</option>
-            <option value="outing">🧳 Đi chơi</option>
-          </select>
+          <select id="editType1"></select>
         </div>
         <div class="slot-col">
           <label style="font-size: 0.8rem; color: var(--subtext);">Mục 2 (Tối / Phụ)</label>
-          <select id="editType2">
-            <option value="none">-- Không có --</option>
-            <option value="school">📖 Đi học</option>
-            <option value="nursing">🟢 Viện dưỡng lão</option>
-            <option value="lawson">🔵 Lawson</option>
-            <option value="outing">🧳 Đi chơi</option>
-          </select>
+          <select id="editType2"></select>
         </div>
       </div>
 
@@ -293,7 +280,7 @@
     </div>
   </div>
 
-  <!-- Modal Thêm Hàng Loạt (Hỗ trợ chọn 2 mục) -->
+  <!-- Modal Thêm Hàng Loạt -->
   <div class="modal" id="batchModal">
     <div class="modal-content">
       <h3>Thêm Lịch Hàng Loạt</h3>
@@ -326,23 +313,11 @@
       <div class="slot-row">
         <div class="slot-col">
           <label style="font-size: 0.8rem; color: var(--subtext);">Mục 1</label>
-          <select id="batchType1">
-            <option value="school">📖 Đi học</option>
-            <option value="nursing">🟢 Viện dưỡng lão</option>
-            <option value="lawson">🔵 Lawson</option>
-            <option value="outing">🧳 Đi chơi</option>
-            <option value="empty">⚪ Xóa về Trống</option>
-          </select>
+          <select id="batchType1"></select>
         </div>
         <div class="slot-col">
           <label style="font-size: 0.8rem; color: var(--subtext);">Mục 2 (Tùy chọn)</label>
-          <select id="batchType2">
-            <option value="none">-- Không có --</option>
-            <option value="lawson">🔵 Lawson</option>
-            <option value="nursing">🟢 Viện dưỡng lão</option>
-            <option value="school">📖 Đi học</option>
-            <option value="outing">🧳 Đi chơi</option>
-          </select>
+          <select id="batchType2"></select>
         </div>
       </div>
       <div>
@@ -352,6 +327,29 @@
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeBatchModal()">Hủy</button>
         <button class="btn btn-primary" onclick="applyBatchSchedule()">Áp dụng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Thêm Mục Mới -->
+  <div class="modal" id="addCategoryModal">
+    <div class="modal-content">
+      <h3>Thêm Mục Mới</h3>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Tên mục</label>
+        <input type="text" id="newCatName" placeholder="VD: Tập Gym, Hẹn hò...">
+      </div>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Icon (Dùng Emoji)</label>
+        <input type="text" id="newCatIcon" placeholder="VD: 💪">
+      </div>
+      <div>
+        <label style="font-size: 0.8rem; color: var(--subtext);">Màu nền (Chọn màu bạn thích)</label>
+        <input type="color" id="newCatColor" value="#ec4899" style="height: 40px; padding: 2px;">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeAddCategoryModal()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveCategory()">Tạo mới</button>
       </div>
     </div>
   </div>
@@ -381,13 +379,87 @@
       console.error("Lỗi Firebase:", e);
     }
 
-    const statusMap = {
-      empty: { text: "Trống", icon: "⛅️", bgClass: "bg-empty" },
+    // Các mục mặc định của bạn
+    const defaultStatusMap = {
       school: { text: "Đi học", icon: "📖", bgClass: "bg-school" },
       nursing: { text: "Viện dưỡng lão", icon: "👴", bgClass: "bg-nursing" },
       lawson: { text: "Lawson", icon: "📦", bgClass: "bg-lawson" },
       outing: { text: "Đi chơi", icon: "👟", bgClass: "bg-outing" }
     };
+
+    let customCategories = JSON.parse(localStorage.getItem("custom_categories") || "{}");
+    let statusMap = {};
+
+    function buildStatusMap() {
+      // Nối danh sách mặc định và tùy chọn
+      statusMap = { 
+        empty: { text: "Trống", icon: "⛅️", bgClass: "bg-empty" },
+        ...defaultStatusMap
+      };
+      for (let key in customCategories) {
+        statusMap[key] = {
+          text: customCategories[key].text,
+          icon: customCategories[key].icon,
+          bgClass: `bg-${key}`
+        };
+      }
+    }
+
+    function renderDynamicStyles() {
+      let styleStr = "";
+      for (let key in customCategories) {
+        styleStr += `
+          .bg-${key} { background: ${customCategories[key].color} !important; }
+        `;
+      }
+      document.getElementById('dynamicStyles').innerHTML = styleStr;
+    }
+
+    function populateSelect(selectId, includeNone, isFilter) {
+      const el = document.getElementById(selectId);
+      if (!el) return;
+      
+      const currentVal = el.value; // giữ giá trị cũ nếu đang chọn
+      el.innerHTML = "";
+
+      if (isFilter) {
+        el.innerHTML += `<option value="all">Tất cả lịch</option>`;
+      }
+
+      if (includeNone) {
+        el.innerHTML += `<option value="none">-- Không có --</option>`;
+      } else if (selectId !== 'filterStatus') {
+        let emptyText = (selectId.startsWith('batch')) ? "⚪ Xóa về Trống" : "⛅️ Trống";
+        el.innerHTML += `<option value="empty">${emptyText}</option>`;
+      } else {
+        el.innerHTML += `<option value="empty">⛅️ Trống</option>`;
+      }
+
+      // Default
+      Object.keys(defaultStatusMap).forEach(key => {
+        el.innerHTML += `<option value="${key}">${defaultStatusMap[key].icon} ${defaultStatusMap[key].text}</option>`;
+      });
+
+      // Custom
+      Object.keys(customCategories).forEach(key => {
+        el.innerHTML += `<option value="${key}">${customCategories[key].icon} ${customCategories[key].text}</option>`;
+      });
+
+      if(currentVal) el.value = currentVal;
+    }
+
+    function renderAllSelects() {
+      populateSelect('filterStatus', false, true);
+      populateSelect('editType1', false, false);
+      populateSelect('editType2', true, false);
+      populateSelect('batchType1', false, false);
+      populateSelect('batchType2', true, false);
+    }
+
+    // Khởi tạo trạng thái danh sách ban đầu
+    buildStatusMap();
+    renderDynamicStyles();
+    renderAllSelects();
 
     // Tính ngày nghỉ lễ Nhật Bản
     function getJapanHolidayName(year, month, day) {
@@ -421,7 +493,6 @@
         const prevHoliday = getJapanHolidayName(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate());
         if (prevHoliday && !prevHoliday.includes("Nghỉ bù")) return `Nghỉ bù (${prevHoliday})`;
       }
-
       return null;
     }
 
@@ -480,12 +551,21 @@
       const userDocRef = db.collection("users").doc(uid);
       unsubscribeSnapshot = userDocRef.onSnapshot(doc => {
         if (doc.exists) {
-          const cloudData = doc.data().events || {};
-          eventsData = cloudData;
+          const data = doc.data();
+          eventsData = data.events || {};
+          
+          if (data.categories) {
+            customCategories = data.categories;
+            localStorage.setItem("custom_categories", JSON.stringify(customCategories));
+            buildStatusMap();
+            renderDynamicStyles();
+            renderAllSelects();
+          }
+
           localStorage.setItem("calendar_events", JSON.stringify(eventsData));
           renderTimeline();
         } else {
-          userDocRef.set({ events: eventsData }, { merge: true });
+          userDocRef.set({ events: eventsData, categories: customCategories }, { merge: true });
         }
       }, err => console.log("Lỗi snapshot:", err));
     }
@@ -497,6 +577,16 @@
           events: eventsData,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true }).catch(err => console.error("Lỗi đồng bộ Cloud:", err));
+      }
+    }
+
+    function saveCategoriesToStorage() {
+      localStorage.setItem("custom_categories", JSON.stringify(customCategories));
+      if (currentUser && db) {
+        db.collection("users").doc(currentUser.uid).set({
+          categories: customCategories,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(err => console.error("Lỗi đồng bộ Cloud Categories:", err));
       }
     }
 
@@ -539,7 +629,6 @@
         const dateKey = formatDateKey(year, month, day);
         const rawData = eventsData[dateKey] || { type: "empty", note: "" };
         
-        // Chuẩn hóa dữ liệu tương thích ngược (hỗ trợ cả 1 mục cũ và 2 mục mới)
         const type1 = rawData.type1 || rawData.type || "empty";
         const type2 = rawData.type2 || "none";
         const note = rawData.note || "";
@@ -547,7 +636,6 @@
         const dayOfWeek = weekdays[new Date(year, month, day).getDay()];
         const holidayName = getJapanHolidayName(year, month, day);
 
-        // Lọc
         if (filterType !== "all") {
           if (type1 !== filterType && type2 !== filterType) continue;
         }
@@ -560,7 +648,6 @@
         const status1 = statusMap[type1] || statusMap.empty;
         const status2 = (type2 !== "none" && statusMap[type2]) ? statusMap[type2] : null;
 
-        // Xác định màu nền cho ô Ngày/Thứ
         let dateBgClass = "bg-empty";
         if (type1 !== "empty") {
           dateBgClass = status1.bgClass;
@@ -570,7 +657,6 @@
 
         let infoHtml = "";
         if (status2) {
-          // Hiển thị 2 mục dạng tầng
           infoHtml = `
             <div class="info-item ${status1.bgClass}">
               <span>${status1.icon}</span> <span>${status1.text}</span>
@@ -580,7 +666,6 @@
             </div>
           `;
         } else {
-          // Hiển thị 1 mục đơn
           infoHtml = `
             <div class="info-single ${dateBgClass}">
               <span class="info-icon">${status1.icon}</span>
@@ -641,6 +726,40 @@
       renderTimeline();
     }
 
+    /* Modal Thêm Mục Mới */
+    function openAddCategoryModal() {
+      toggleMenu();
+      document.getElementById("addCategoryModal").classList.add("active");
+    }
+    function closeAddCategoryModal() {
+      document.getElementById("addCategoryModal").classList.remove("active");
+    }
+    function saveCategory() {
+      const name = document.getElementById("newCatName").value.trim();
+      const icon = document.getElementById("newCatIcon").value.trim();
+      const color = document.getElementById("newCatColor").value;
+
+      if (!name || !icon) {
+        alert("Vui lòng nhập đủ tên mục và Emoji!");
+        return;
+      }
+
+      const id = "custom_" + Date.now();
+      customCategories[id] = { text: name, icon: icon, color: color };
+
+      saveCategoriesToStorage();
+      buildStatusMap();
+      renderDynamicStyles();
+      renderAllSelects();
+      renderTimeline();
+      
+      document.getElementById("newCatName").value = "";
+      document.getElementById("newCatIcon").value = "";
+      closeAddCategoryModal();
+      alert(`Đã thêm mục "${name}" thành công!`);
+    }
+
+    /* Modal Thêm Hàng Loạt */
     function openBatchModal() {
       toggleMenu();
       const year = currentDate.getFullYear();
@@ -725,6 +844,7 @@
       return div.innerHTML;
     }
 
+    /* Xuất File JSON */
     function exportData() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(eventsData, null, 2));
       const downloadAnchor = document.createElement('a');
@@ -750,6 +870,29 @@
         }
       };
       reader.readAsText(file);
+    }
+
+    /* Xuất file PDF */
+    function exportPDF() {
+      toggleMenu(); // Đóng menu
+      // Thêm một chút delay để UI menu ẩn hẳn rồi mới chụp PDF
+      setTimeout(() => {
+        const element = document.getElementById('pdfWrapper');
+        const monthLabel = document.getElementById('currentMonthLabel').innerText.replace('/', '-');
+        
+        const opt = {
+          margin:       [10, 5, 10, 5],
+          filename:     `Lich_${monthLabel}.pdf`,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+          // Thông báo khi tải xong
+          console.log("Xuất PDF thành công!");
+        });
+      }, 300);
     }
 
     function requestNotification() {
