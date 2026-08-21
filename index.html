@@ -6,7 +6,7 @@
   <title>Lịch Cá Nhân</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="apple-touch-icon" href="https://i.pinimg.com/736x/19/5f/f8/195ff831d49fd6fd3e5921aca87d0e82.jpg">
+  <link rel="apple-touch-icon" href="https://via.placeholder.com/192.png?text=L%E1%BB%8Bch">
   
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -44,7 +44,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg); color: var(--text); padding-bottom: 30px; }
 
-    /* Header */
     header {
       position: sticky; top: 0; background: var(--card-bg); border-bottom: 1px solid var(--border);
       padding: 12px 16px; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -94,7 +93,7 @@
       background: var(--bg); color: var(--text); font-size: 0.9rem;
     }
 
-    /* Timeline dạng cột - Thiết kế ngang theo ảnh minh họa */
+    /* Timeline dạng cột */
     .timeline { max-width: 600px; margin: 16px auto; padding: 0 12px; display: flex; flex-direction: column; gap: 10px; }
     
     .day-card {
@@ -106,37 +105,42 @@
     .day-card:active { transform: scale(0.98); }
     .day-card.today { border: 2px solid var(--primary); }
 
-    /* Khối Màu Bên Trái (Header Block) */
+    /* Khối Màu Bên Trái */
     .left-badge {
-      display: flex; align-items: center; color: #fff; background: var(--tag-empty);
-      min-width: 165px; max-width: 185px; flex-shrink: 0; padding: 6px 0;
+      display: flex; align-items: stretch; color: #fff; background: var(--tag-empty);
+      min-width: 170px; max-width: 190px; flex-shrink: 0;
     }
     .date-section {
       width: 55px; text-align: center; display: flex; flex-direction: column;
-      justify-content: center; align-items: center; flex-shrink: 0;
+      justify-content: center; align-items: center; flex-shrink: 0; padding: 6px 0;
     }
     .date-num { font-size: 1.35rem; font-weight: bold; line-height: 1.1; font-family: "Times New Roman", Georgia, serif; }
     .date-weekday { font-size: 0.85rem; font-weight: 600; }
 
-    .divider-line { width: 1px; background: rgba(255,255,255,0.4); align-self: stretch; margin: 2px 0; }
+    .divider-line { width: 1px; background: rgba(255,255,255,0.4); align-self: stretch; }
 
     .info-section {
-      flex: 1; padding: 0 10px; display: flex; flex-direction: column;
-      justify-content: center; gap: 2px;
+      flex: 1; display: flex; flex-direction: column; justify-content: center;
     }
+    .info-single {
+      padding: 6px 8px; display: flex; flex-direction: column; justify-content: center; gap: 2px;
+    }
+    .info-item {
+      padding: 4px 8px; display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600;
+      color: #fff;
+    }
+    .info-item:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.25); }
+
     .info-icon { font-size: 0.9rem; line-height: 1; }
-    .info-title { font-size: 0.85rem; font-weight: 600; line-height: 1.2; }
+    .info-title { font-size: 0.82rem; font-weight: 600; line-height: 1.2; }
     .holiday-subtext { font-size: 0.7rem; font-weight: bold; color: #ffe4e6; line-height: 1.1; }
 
-    /* Đổi màu Khối Bên Trái theo từng phân loại */
-    .day-card.type-nursing .left-badge { background: var(--tag-nursing); }
-    .day-card.type-lawson .left-badge { background: var(--tag-lawson); }
-    .day-card.type-school .left-badge { background: var(--tag-school); }
-    .day-card.type-outing .left-badge { background: var(--tag-outing); }
-    .day-card.type-empty .left-badge { background: var(--tag-empty); }
-    
-    /* Ngày lễ trống thì ưu tiên khối màu đỏ hồng */
-    .day-card.holiday.type-empty .left-badge { background: var(--holiday-color); }
+    .bg-school { background: var(--tag-school); }
+    .bg-nursing { background: var(--tag-nursing); }
+    .bg-lawson { background: var(--tag-lawson); }
+    .bg-outing { background: var(--tag-outing); }
+    .bg-empty { background: var(--tag-empty); }
+    .bg-holiday { background: var(--holiday-color); }
 
     /* Khối Ghi chú Bên Phải */
     .note-section {
@@ -173,6 +177,18 @@
     }
     .weekday-checkbox:checked + .weekday-label {
       background: var(--primary); color: #fff; border-color: var(--primary);
+    }
+
+    .checkbox-holiday-wrapper {
+      display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 4px;
+    }
+    .checkbox-holiday-wrapper input { width: 18px; height: 18px; cursor: pointer; }
+
+    .slot-row {
+      display: flex; gap: 10px;
+    }
+    .slot-col {
+      flex: 1;
     }
   </style>
 </head>
@@ -238,20 +254,34 @@
     </div>
   </div>
 
-  <!-- Modal Chi tiết ngày -->
+  <!-- Modal Chi tiết ngày (2 Mục) -->
   <div class="modal" id="editModal">
     <div class="modal-content">
       <h3 id="modalDateLabel">Chi tiết ngày</h3>
-      <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Phân loại</label>
-        <select id="editType">
-          <option value="empty">⚪ Trống</option>
-          <option value="school">📖 Đi học</option>
-          <option value="nursing">🟢 Viện dưỡng lão</option>
-          <option value="lawson">🔵 Lawson</option>
-          <option value="outing">🧳 Đi chơi</option>
-        </select>
+      
+      <div class="slot-row">
+        <div class="slot-col">
+          <label style="font-size: 0.8rem; color: var(--subtext);">Mục 1 (Sáng / Chính)</label>
+          <select id="editType1">
+            <option value="empty">⚪ Trống</option>
+            <option value="school">📖 Đi học</option>
+            <option value="nursing">🟢 Viện dưỡng lão</option>
+            <option value="lawson">🔵 Lawson</option>
+            <option value="outing">🧳 Đi chơi</option>
+          </select>
+        </div>
+        <div class="slot-col">
+          <label style="font-size: 0.8rem; color: var(--subtext);">Mục 2 (Tối / Phụ)</label>
+          <select id="editType2">
+            <option value="none">-- Không có --</option>
+            <option value="school">📖 Đi học</option>
+            <option value="nursing">🟢 Viện dưỡng lão</option>
+            <option value="lawson">🔵 Lawson</option>
+            <option value="outing">🧳 Đi chơi</option>
+          </select>
+        </div>
       </div>
+
       <div>
         <label style="font-size: 0.8rem; color: var(--subtext);">Ghi chú chi tiết</label>
         <textarea id="editNote" rows="3" placeholder="Nhập ghi chú chi tiết..."></textarea>
@@ -263,7 +293,7 @@
     </div>
   </div>
 
-  <!-- Modal Thêm Hàng Loạt -->
+  <!-- Modal Thêm Hàng Loạt (Hỗ trợ chọn 2 mục) -->
   <div class="modal" id="batchModal">
     <div class="modal-content">
       <h3>Thêm Lịch Hàng Loạt</h3>
@@ -288,14 +318,32 @@
         </div>
       </div>
       <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Phân loại</label>
-        <select id="batchType">
-          <option value="school">📖 Đi học</option>
-          <option value="nursing">🟢 Viện dưỡng lão</option>
-          <option value="lawson">🔵 Lawson</option>
-          <option value="outing">🧳 Đi chơi</option>
-          <option value="empty">⚪ Xóa về Trống</option>
-        </select>
+        <label class="checkbox-holiday-wrapper">
+          <input type="checkbox" id="batchSkipHolidays" checked>
+          <span>🎌 Tự động bỏ qua các ngày nghỉ lễ Nhật Bản</span>
+        </label>
+      </div>
+      <div class="slot-row">
+        <div class="slot-col">
+          <label style="font-size: 0.8rem; color: var(--subtext);">Mục 1</label>
+          <select id="batchType1">
+            <option value="school">📖 Đi học</option>
+            <option value="nursing">🟢 Viện dưỡng lão</option>
+            <option value="lawson">🔵 Lawson</option>
+            <option value="outing">🧳 Đi chơi</option>
+            <option value="empty">⚪ Xóa về Trống</option>
+          </select>
+        </div>
+        <div class="slot-col">
+          <label style="font-size: 0.8rem; color: var(--subtext);">Mục 2 (Tùy chọn)</label>
+          <select id="batchType2">
+            <option value="none">-- Không có --</option>
+            <option value="lawson">🔵 Lawson</option>
+            <option value="nursing">🟢 Viện dưỡng lão</option>
+            <option value="school">📖 Đi học</option>
+            <option value="outing">🧳 Đi chơi</option>
+          </select>
+        </div>
       </div>
       <div>
         <label style="font-size: 0.8rem; color: var(--subtext);">Ghi chú chung (tùy chọn)</label>
@@ -334,11 +382,11 @@
     }
 
     const statusMap = {
-      empty: { text: "Trống", icon: "⛅️" },
-      school: { text: "Đi học", icon: "📖" },
-      nursing: { text: "Viện dưỡng lão", icon: "👴" },
-      lawson: { text: "Lawson", icon: "📦" },
-      outing: { text: "Đi chơi", icon: "👟" }
+      empty: { text: "Trống", icon: "⛅️", bgClass: "bg-empty" },
+      school: { text: "Đi học", icon: "📖", bgClass: "bg-school" },
+      nursing: { text: "Viện dưỡng lão", icon: "👴", bgClass: "bg-nursing" },
+      lawson: { text: "Lawson", icon: "📦", bgClass: "bg-lawson" },
+      outing: { text: "Đi chơi", icon: "👟", bgClass: "bg-outing" }
     };
 
     // Tính ngày nghỉ lễ Nhật Bản
@@ -489,35 +537,72 @@
 
       for (let day = 1; day <= totalDays; day++) {
         const dateKey = formatDateKey(year, month, day);
-        const dayData = eventsData[dateKey] || { type: "empty", note: "" };
+        const rawData = eventsData[dateKey] || { type: "empty", note: "" };
+        
+        // Chuẩn hóa dữ liệu tương thích ngược (hỗ trợ cả 1 mục cũ và 2 mục mới)
+        const type1 = rawData.type1 || rawData.type || "empty";
+        const type2 = rawData.type2 || "none";
+        const note = rawData.note || "";
+
         const dayOfWeek = weekdays[new Date(year, month, day).getDay()];
         const holidayName = getJapanHolidayName(year, month, day);
 
-        if (filterType !== "all" && dayData.type !== filterType) continue;
-        if (searchQuery && !dayData.note.toLowerCase().includes(searchQuery)) continue;
+        // Lọc
+        if (filterType !== "all") {
+          if (type1 !== filterType && type2 !== filterType) continue;
+        }
+        if (searchQuery && !note.toLowerCase().includes(searchQuery)) continue;
 
         const card = document.createElement("div");
-        card.className = `day-card ${dateKey === todayStr ? "today" : ""} ${holidayName ? "holiday" : ""} type-${dayData.type}`;
+        card.className = `day-card ${dateKey === todayStr ? "today" : ""}`;
         card.onclick = () => openModal(dateKey, year, month, day);
 
-        const statusInfo = statusMap[dayData.type] || statusMap.empty;
+        const status1 = statusMap[type1] || statusMap.empty;
+        const status2 = (type2 !== "none" && statusMap[type2]) ? statusMap[type2] : null;
 
-        // Bố cục chính xác theo ảnh minh họa
+        // Xác định màu nền cho ô Ngày/Thứ
+        let dateBgClass = "bg-empty";
+        if (type1 !== "empty") {
+          dateBgClass = status1.bgClass;
+        } else if (holidayName) {
+          dateBgClass = "bg-holiday";
+        }
+
+        let infoHtml = "";
+        if (status2) {
+          // Hiển thị 2 mục dạng tầng
+          infoHtml = `
+            <div class="info-item ${status1.bgClass}">
+              <span>${status1.icon}</span> <span>${status1.text}</span>
+            </div>
+            <div class="info-item ${status2.bgClass}">
+              <span>${status2.icon}</span> <span>${status2.text}</span>
+            </div>
+          `;
+        } else {
+          // Hiển thị 1 mục đơn
+          infoHtml = `
+            <div class="info-single ${dateBgClass}">
+              <span class="info-icon">${status1.icon}</span>
+              <span class="info-title">${status1.text}</span>
+              ${holidayName ? `<span class="holiday-subtext">🎌 ${holidayName}</span>` : ''}
+            </div>
+          `;
+        }
+
         card.innerHTML = `
-          <div class="left-badge">
-            <div class="date-section">
+          <div class="left-badge ${dateBgClass}">
+            <div class="date-section ${dateBgClass}">
               <span class="date-num">${String(day).padStart(2, '0')}</span>
               <span class="date-weekday">${dayOfWeek}</span>
             </div>
             <div class="divider-line"></div>
             <div class="info-section">
-              <span class="info-icon">${statusInfo.icon}</span>
-              <span class="info-title">${statusInfo.text}</span>
-              ${holidayName ? `<span class="holiday-subtext">🎌 ${holidayName}</span>` : ''}
+              ${infoHtml}
             </div>
           </div>
           <div class="note-section">
-            ${dayData.note ? escapeHtml(dayData.note) : '<span class="note-placeholder"></span>'}
+            ${note ? escapeHtml(note) : '<span class="note-placeholder"></span>'}
           </div>
         `;
         container.appendChild(card);
@@ -527,9 +612,11 @@
     function openModal(dateKey, y, m, d) {
       selectedDateKey = dateKey;
       document.getElementById("modalDateLabel").innerText = `Ngày ${d}/${m + 1}/${y}`;
-      const data = eventsData[dateKey] || { type: "empty", note: "" };
-      document.getElementById("editType").value = data.type;
-      document.getElementById("editNote").value = data.note;
+      const rawData = eventsData[dateKey] || { type: "empty", note: "" };
+      
+      document.getElementById("editType1").value = rawData.type1 || rawData.type || "empty";
+      document.getElementById("editType2").value = rawData.type2 || "none";
+      document.getElementById("editNote").value = rawData.note || "";
       document.getElementById("editModal").classList.add("active");
     }
 
@@ -539,13 +626,14 @@
 
     function saveDayData() {
       if (!selectedDateKey) return;
-      const type = document.getElementById("editType").value;
+      const type1 = document.getElementById("editType1").value;
+      const type2 = document.getElementById("editType2").value;
       const note = document.getElementById("editNote").value.trim();
 
-      if (type === "empty" && !note) {
+      if (type1 === "empty" && type2 === "none" && !note) {
         delete eventsData[selectedDateKey];
       } else {
-        eventsData[selectedDateKey] = { type, note };
+        eventsData[selectedDateKey] = { type1, type2, note };
       }
 
       saveToStorage();
@@ -572,8 +660,10 @@
     function applyBatchSchedule() {
       const startVal = document.getElementById("batchStartDate").value;
       const endVal = document.getElementById("batchEndDate").value;
-      const type = document.getElementById("batchType").value;
+      const type1 = document.getElementById("batchType1").value;
+      const type2 = document.getElementById("batchType2").value;
       const note = document.getElementById("batchNote").value.trim();
+      const skipHolidays = document.getElementById("batchSkipHolidays").checked;
 
       if (!startVal || !endVal) {
         alert("Vui lòng chọn ngày bắt đầu và ngày kết thúc!");
@@ -599,15 +689,26 @@
       let count = 0;
 
       while (curr <= endDate) {
+        const y = curr.getFullYear();
+        const m = curr.getMonth();
+        const d = curr.getDate();
         const dayOfWeek = curr.getDay();
+
         if (selectedWeekdays.includes(dayOfWeek)) {
-          const dateKey = formatDateKey(curr.getFullYear(), curr.getMonth(), curr.getDate());
-          if (type === "empty" && !note) {
+          const holidayName = getJapanHolidayName(y, m, d);
+
+          if (skipHolidays && holidayName) {
+            const dateKey = formatDateKey(y, m, d);
             delete eventsData[dateKey];
           } else {
-            eventsData[dateKey] = { type, note };
+            const dateKey = formatDateKey(y, m, d);
+            if (type1 === "empty" && type2 === "none" && !note) {
+              delete eventsData[dateKey];
+            } else {
+              eventsData[dateKey] = { type1, type2, note };
+            }
+            count++;
           }
-          count++;
         }
         curr.setDate(curr.getDate() + 1);
       }
@@ -615,7 +716,7 @@
       saveToStorage();
       closeBatchModal();
       renderTimeline();
-      alert(`Đã cập nhật thành công ${count} ngày!`);
+      alert(`Đã cập nhật xong! (${count} ngày đã được đặt lịch).`);
     }
 
     function escapeHtml(text) {
