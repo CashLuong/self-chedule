@@ -104,7 +104,6 @@
       display: flex; align-items: stretch; cursor: pointer; position: relative;
       transition: transform 0.1s, box-shadow 0.2s; overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05); min-height: 56px;
-      /* Ngăn lỗi cắt ngang thẻ khi xuất PDF */
       page-break-inside: avoid;
       break-inside: avoid;
     }
@@ -192,8 +191,32 @@
 
     .slot-row { display: flex; gap: 10px; }
     .slot-col { flex: 1; }
+  
+    /* CSS cho bộ đếm */
+    .counters-container {
+      display: flex; gap: 12px; overflow-x: auto; padding: 16px 12px 4px 12px;
+      scrollbar-width: none;
+    }
+    .counters-container::-webkit-scrollbar { display: none; }
+    .counter-widget {
+      background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--primary);
+      border-radius: 12px; padding: 12px; flex-shrink: 0; min-width: 145px;
+      display: flex; flex-direction: column; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .counter-widget .del-btn {
+      position: absolute; top: 6px; right: 6px; font-size: 0.85rem; color: var(--subtext);
+      background: none; border: none; cursor: pointer; padding: 4px; border-radius: 50%;
+    }
+    .counter-widget .del-btn:active { background: var(--bg); color: #ef4444; }
+    .counter-title { font-size: 0.75rem; color: var(--subtext); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px;}
+    .counter-value { font-size: 1.25rem; font-weight: 800; color: var(--text); margin-bottom: 6px; line-height: 1;}
+    .counter-cat { font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px;}
+
   </style>
-  <style id="dynamicStyles"></style>
+  <style id="dynamicStyles">
+
+
+  </style>
 </head>
 <body>
 
@@ -207,8 +230,11 @@
     <button class="btn-icon" onclick="toggleMenu()" title="Mở Menu">☰</button>
   </header>
 
-  <!-- Lưới Timeline -->
+  <!-- Lưới Timeline (Bọc thêm div wrapper để in PDF đẹp hơn) -->
   <div id="pdfWrapper" style="background: var(--bg); min-height: 100vh;">
+    <!-- Container Bộ Đếm -->
+    <div id="countersContainer" class="counters-container" style="display: none;"></div>
+
     <main class="timeline" id="timelineContainer"></main>
   </div>
 
@@ -233,6 +259,7 @@
       <span class="menu-label">Công cụ nhanh</span>
       <button class="menu-item-btn" onclick="openBatchModal()" style="background: var(--primary); color: #fff; border: none;">⚡ Thêm lịch hàng loạt</button>
       <button class="menu-item-btn" onclick="openBatchDeleteModal()" style="background: #f97316; color: #fff; border: none;">🗑 Xóa lịch hàng loạt</button>
+      <button class="menu-item-btn" onclick="openAddCounterModal()" style="background: #14b8a6; color: #fff; border: none;">⏱ Thêm bộ đếm</button>
       <button class="menu-item-btn" onclick="openAddCategoryModal()" style="background: var(--tag-nursing); color: #fff; border: none;">➕ Thêm mục mới</button>
       <button class="menu-item-btn" onclick="exportPDF()" style="background: #ef4444; color: #fff; border: none;">📄 Xuất Lịch ra PDF</button>
     </div>
@@ -254,6 +281,28 @@
       <button class="menu-item-btn" onclick="exportData()">📤 Xuất File Dự Phòng (.json)</button>
       <button class="menu-item-btn" onclick="document.getElementById('importFile').click()">📥 Nhập File Dự Phòng (.json)</button>
       <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
+    </div>
+  </div>
+
+  <!-- Modal Thêm Bộ Đếm -->
+  <div class="modal" id="addCounterModal">
+    <div class="modal-content">
+      <h3>Thêm Bộ Đếm</h3>
+      <div class="input-group" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
+        <label style="font-size: 0.8rem; color: var(--subtext); font-weight: 500;">Loại bộ đếm</label>
+        <select id="counterMode" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: 0.9rem;">
+          <option value="countdown">⏳ Đếm ngược ngày (Còn bao nhiêu ngày)</option>
+          <option value="count_month">🗓 Đếm số ngày trong tháng này</option>
+        </select>
+      </div>
+      <div class="input-group" style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 0.8rem; color: var(--subtext); font-weight: 500;">Chọn mục cần đếm</label>
+        <select id="counterCategory" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: 0.9rem;"></select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeAddCounterModal()">Hủy</button>
+        <button class="btn btn-primary" onclick="saveCounter()">Thêm</button>
+      </div>
     </div>
   </div>
 
@@ -310,12 +359,6 @@
           <input type="checkbox" id="w6" class="weekday-checkbox"><label for="w6" class="weekday-label">T7</label>
           <input type="checkbox" id="w0" class="weekday-checkbox"><label for="w0" class="weekday-label">CN</label>
         </div>
-      </div>
-      <div>
-        <label class="checkbox-holiday-wrapper">
-          <input type="checkbox" id="batchSkipHolidays" checked>
-          <span>🎌 Tự động bỏ qua các ngày nghỉ lễ Nhật Bản</span>
-        </label>
       </div>
       <div class="slot-row">
         <div class="slot-col">
@@ -419,19 +462,20 @@
 
     // Các mục mặc định của bạn
     const defaultStatusMap = {
-      school: { text: "Đi học", icon: "📖", bgClass: "bg-school" },
-      nursing: { text: "Viện dưỡng lão", icon: "👴", bgClass: "bg-nursing" },
-      lawson: { text: "Lawson", icon: "📦", bgClass: "bg-lawson" },
-      outing: { text: "Đi chơi", icon: "👟", bgClass: "bg-outing" }
+      school: { text: "Đi học", icon: "📖", bgClass: "bg-school", hex: "#8b5cf6" },
+      nursing: { text: "Viện dưỡng lão", icon: "👴", bgClass: "bg-nursing", hex: "#10b981" },
+      lawson: { text: "Lawson", icon: "📦", bgClass: "bg-lawson", hex: "#0284c7" },
+      outing: { text: "Đi chơi", icon: "👟", bgClass: "bg-outing", hex: "#f59e0b" }
     };
 
     let customCategories = JSON.parse(localStorage.getItem("custom_categories") || "{}");
+    let userCounters = JSON.parse(localStorage.getItem("user_counters") || "[]");
     let statusMap = {};
 
     function buildStatusMap() {
       // Nối danh sách mặc định và tùy chọn
       statusMap = { 
-        empty: { text: "Trống", icon: "⛅️", bgClass: "bg-empty" },
+        empty: { text: "Trống", icon: "⛅️", bgClass: "bg-empty", hex: "#8FABD4" },
         ...defaultStatusMap
       };
       for (let key in customCategories) {
@@ -492,6 +536,7 @@
       populateSelect('editType2', true, false);
       populateSelect('batchType1', false, false);
       populateSelect('batchType2', true, false);
+      populateSelect('counterCategory', false, false);
     }
 
     // Khởi tạo trạng thái danh sách ban đầu
@@ -599,6 +644,10 @@
             renderDynamicStyles();
             renderAllSelects();
           }
+          if (data.counters) {
+            userCounters = data.counters;
+            localStorage.setItem("user_counters", JSON.stringify(userCounters));
+          }
 
           localStorage.setItem("calendar_events", JSON.stringify(eventsData));
           renderTimeline();
@@ -636,6 +685,112 @@
 
     if (localStorage.getItem("theme") === "dark") {
       document.body.setAttribute("data-theme", "dark");
+    }
+
+    function saveCountersToStorage() {
+      localStorage.setItem("user_counters", JSON.stringify(userCounters));
+      if (currentUser && db) {
+        db.collection("users").doc(currentUser.uid).set({
+          counters: userCounters,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(err => console.error("Lỗi đồng bộ Cloud Counters:", err));
+      }
+    }
+
+    function openAddCounterModal() {
+      toggleMenu();
+      document.getElementById("addCounterModal").classList.add("active");
+    }
+    function closeAddCounterModal() {
+      document.getElementById("addCounterModal").classList.remove("active");
+    }
+    function saveCounter() {
+      const mode = document.getElementById("counterMode").value;
+      const cat = document.getElementById("counterCategory").value;
+      userCounters.push({ mode: mode, category: cat, id: Date.now() });
+      saveCountersToStorage();
+      closeAddCounterModal();
+      renderCounters();
+    }
+    function deleteCounter(index) {
+      if(confirm("Xóa bộ đếm này?")) {
+        userCounters.splice(index, 1);
+        saveCountersToStorage();
+        renderCounters();
+      }
+    }
+
+    function renderCounters() {
+      const container = document.getElementById("countersContainer");
+      if (!container) return;
+      container.innerHTML = "";
+      
+      if (userCounters.length === 0) {
+        container.style.display = "none";
+        return;
+      }
+      container.style.display = "flex";
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      let today = new Date();
+      today.setHours(0,0,0,0);
+
+      userCounters.forEach((counter, index) => {
+        const cat = counter.category;
+        const mode = counter.mode;
+        const statusInfo = statusMap[cat] || statusMap.empty;
+        const hexColor = statusInfo.hex || statusInfo.color || "#8FABD4";
+
+        let valueText = "";
+        
+        if (mode === "countdown") {
+          let daysLeft = -1;
+          for(let i = 0; i <= 365; i++) {
+            let d = new Date(today);
+            d.setDate(today.getDate() + i);
+            let dk = formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
+            let rawData = eventsData[dk] || { type1: "empty", type2: "none" };
+            let t1 = rawData.type1 || rawData.type || "empty";
+            let t2 = rawData.type2 || "none";
+            
+            if (t1 === cat || t2 === cat) {
+              daysLeft = i;
+              break;
+            }
+          }
+          if (daysLeft === -1) valueText = "Chưa có";
+          else if (daysLeft === 0) valueText = "Hôm nay";
+          else if (daysLeft === 1) valueText = "Ngày mai";
+          else valueText = `Còn ${daysLeft} ngày`;
+        } 
+        else if (mode === "count_month") {
+          let count = 0;
+          for (let day = 1; day <= totalDays; day++) {
+            let dk = formatDateKey(year, month, day);
+            let rawData = eventsData[dk] || { type1: "empty", type2: "none" };
+            let t1 = rawData.type1 || rawData.type || "empty";
+            let t2 = rawData.type2 || "none";
+            if (t1 === cat || t2 === cat) count++;
+          }
+          valueText = `${count} ngày`;
+        }
+
+        const titleText = mode === "countdown" ? "⏳ Đếm ngược" : "🗓 Tháng này";
+        
+        const widget = document.createElement("div");
+        widget.className = "counter-widget";
+        widget.style.borderLeftColor = hexColor;
+        widget.innerHTML = `
+          <button class="del-btn" onclick="deleteCounter(${index})" title="Xóa bộ đếm">✕</button>
+          <div class="counter-title">${titleText}</div>
+          <div class="counter-value">${valueText}</div>
+          <div class="counter-cat"><span style="font-size:1.05rem">${statusInfo.icon}</span> <span style="color:${hexColor}">${statusInfo.text}</span></div>
+        `;
+        container.appendChild(widget);
+      });
     }
 
     function changeMonth(offset) {
@@ -730,6 +885,7 @@
         `;
         container.appendChild(card);
       }
+      renderCounters();
     }
 
     function openModal(dateKey, y, m, d) {
@@ -830,7 +986,7 @@
       const type1 = document.getElementById("batchType1").value;
       const type2 = document.getElementById("batchType2").value;
       const note = document.getElementById("batchNote").value.trim();
-      const skipHolidays = document.getElementById("batchSkipHolidays").checked;
+      const skipHolidays = true; // Luôn luôn tự động bỏ qua ngày lễ
 
       if (!startVal || !endVal) {
         alert("Vui lòng chọn ngày bắt đầu và ngày kết thúc!");
