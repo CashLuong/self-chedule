@@ -1,355 +1,26 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Lịch Cá Nhân</title>
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="apple-touch-icon" href="https://via.placeholder.com/192.png?text=L%E1%BB%8Bch">
-  
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  
-  <!-- html2pdf SDK -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+import re
 
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --text: #0f172a;
-      --subtext: #64748b;
-      --border: #e2e8f0;
-      --primary: #3b82f6;
-      --highlight: #eff6ff;
-      --holiday-color: #e11d48;
-      --tag-empty: #8FABD4;
-      --tag-nursing: #10b981;
-      --tag-lawson: #0284c7;
-      --tag-outing: #f59e0b;
-      --tag-school: #8b5cf6;
-    }
+with open("index_final.html", "r", encoding="utf-8") as f:
+    code = f.read()
 
-    [data-theme="dark"] {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f8fafc;
-      --subtext: #94a3b8;
-      --border: #334155;
-      --primary: #60a5fa;
-      --highlight: #1e3a8a;
-      --holiday-color: #f43f5e;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding-bottom: 30px; }
-
-    header {
-      position: sticky; top: 0; background: var(--card-bg); border-bottom: 1px solid var(--border);
-      padding: 12px 16px; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .month-nav { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 1.15rem; }
-    .btn-icon { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--text); padding: 6px; }
-
-    /* Drawer Menu */
-    .menu-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250;
-      opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
-    }
-    .menu-overlay.active { opacity: 1; pointer-events: auto; }
-
-    .menu-drawer {
-      position: fixed; top: 0; right: -320px; width: 300px; height: 100%;
-      background: var(--card-bg); z-index: 300; box-shadow: -2px 0 10px rgba(0,0,0,0.15);
-      display: flex; flex-direction: column; padding: 20px; gap: 16px;
-      transition: right 0.25s ease; overflow-y: auto;
-    }
-    .menu-drawer.active { right: 0; }
-
-    .menu-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-    .menu-title { font-weight: bold; font-size: 1.1rem; }
-    
-    .user-card {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
-      padding: 12px; display: flex; flex-direction: column; gap: 10px;
-    }
-    .user-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; }
-    .user-avatar { width: 32px; height: 32px; border-radius: 50%; }
-    .btn-auth {
-      width: 100%; background: var(--primary); color: #fff; border: none;
-      padding: 8px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;
-    }
-
-    .menu-group { display: flex; flex-direction: column; gap: 8px; }
-    .menu-label { font-size: 0.8rem; color: var(--subtext); font-weight: 600; text-transform: uppercase; }
-    .menu-item-btn {
-      display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px;
-      border-radius: 8px; border: 1px solid var(--border); background: var(--bg);
-      color: var(--text); font-size: 0.9rem; cursor: pointer; font-weight: 500;
-    }
-    .menu-search, .menu-select {
-      width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--bg); color: var(--text); font-size: 0.9rem;
-    }
-
-    /* Timeline dạng cột */
-    .timeline { max-width: 600px; margin: 16px auto; padding: 0 12px; display: flex; flex-direction: column; gap: 10px; }
-    
-    .day-card {
-      background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
-      display: flex; align-items: stretch; cursor: pointer; position: relative;
-      transition: transform 0.1s, box-shadow 0.2s; overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05); min-height: 56px;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-    .day-card:active { transform: scale(0.98); }
-    .day-card.today { border: 2px solid var(--primary); }
-
-    /* Khối Màu Bên Trái */
-    .left-badge {
-      display: flex; align-items: stretch; color: #fff; background: var(--tag-empty);
-      min-width: 170px; max-width: 190px; flex-shrink: 0;
-    }
-    .date-section {
-      width: 55px; text-align: center; display: flex; flex-direction: column;
-      justify-content: center; align-items: center; flex-shrink: 0; padding: 6px 0;
-    }
-    .date-num { font-size: 1.35rem; font-weight: bold; line-height: 1.1; font-family: "Times New Roman", Georgia, serif; }
-    .date-weekday { font-size: 0.85rem; font-weight: 600; }
-
-    .divider-line { width: 1px; background: rgba(255,255,255,0.4); align-self: stretch; }
-
-    .info-section {
-      flex: 1; display: flex; flex-direction: column; justify-content: center;
-    }
-    .info-single {
-      padding: 6px 8px; display: flex; flex-direction: column; justify-content: center; gap: 2px;
-    }
-    .info-item {
-      padding: 4px 8px; display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600;
-      color: #fff;
-    }
-    .info-item:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.25); }
-
-    .info-icon { font-size: 0.9rem; line-height: 1; }
-    .info-title { font-size: 0.82rem; font-weight: 600; line-height: 1.2; }
-    .holiday-subtext { font-size: 0.7rem; font-weight: bold; color: #ffe4e6; line-height: 1.1; }
-
-    .bg-school { background: var(--tag-school); }
-    .bg-nursing { background: var(--tag-nursing); }
-    .bg-lawson { background: var(--tag-lawson); }
-    .bg-outing { background: var(--tag-outing); }
-    .bg-empty { background: var(--tag-empty); }
-    .bg-holiday { background: var(--holiday-color); }
-
-    /* Khối Ghi chú Bên Phải */
-    .note-section {
-      flex: 1; padding: 10px 14px; display: flex; align-items: center;
-      font-size: 0.9rem; color: var(--text); white-space: pre-wrap; word-break: break-word; line-height: 1.35;
-    }
-    .note-placeholder { color: var(--subtext); font-style: italic; font-size: 0.85rem; opacity: 0.7; }
-
-    /* Modal */
-    .modal {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      align-items: center; justify-content: center; z-index: 400; padding: 16px;
-    }
-    .modal.active { display: flex; }
-    .modal-content {
-      background: var(--card-bg); border-radius: 16px; width: 100%; max-width: 420px;
-      padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 14px;
-      max-height: 90vh; overflow-y: auto;
-    }
-    .modal-content select, .modal-content textarea, .modal-content input[type="date"], .modal-content input[type="text"] {
-      width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--bg); color: var(--text); font-size: 0.9rem;
-    }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
-    .btn { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
-    .btn-primary { background: var(--primary); color: #fff; }
-    .btn-secondary { background: var(--border); color: var(--text); }
-
-    .weekday-selector { display: flex; gap: 6px; justify-content: space-between; margin-top: 4px; }
-    .weekday-checkbox { display: none; }
-    .weekday-label {
-      flex: 1; text-align: center; padding: 6px 0; border-radius: 6px; border: 1px solid var(--border);
-      background: var(--bg); font-size: 0.8rem; font-weight: 600; cursor: pointer;
-    }
-    .weekday-checkbox:checked + .weekday-label {
-      background: var(--primary); color: #fff; border-color: var(--primary);
-    }
-
-    .checkbox-holiday-wrapper {
-      display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-top: 4px;
-    }
-    .checkbox-holiday-wrapper input { width: 18px; height: 18px; cursor: pointer; }
-
-    .slot-row { display: flex; gap: 10px; }
-    .slot-col { flex: 1; }
-  
-    /* CSS cho bộ đếm */
-    .counters-container {
-      display: flex; gap: 12px; overflow-x: auto; padding: 16px 12px 4px 12px;
-      scrollbar-width: none;
-    }
-    .counters-container::-webkit-scrollbar { display: none; }
-    .counter-widget {
-      background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--primary);
-      border-radius: 12px; padding: 12px; flex-shrink: 0; min-width: 145px;
-      display: flex; flex-direction: column; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .counter-widget .del-btn {
-      position: absolute; top: 6px; right: 6px; font-size: 0.85rem; color: var(--subtext);
-      background: none; border: none; cursor: pointer; padding: 4px; border-radius: 50%;
-    }
-    .counter-widget .del-btn:active { background: var(--bg); color: #ef4444; }
-    .counter-title { font-size: 0.75rem; color: var(--subtext); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px;}
-    .counter-value { font-size: 1.25rem; font-weight: 800; color: var(--text); margin-bottom: 6px; line-height: 1;}
-    .counter-cat { font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px;}
-
-  </style>
-  <style id="dynamicStyles">
-
-
-  </style>
-</head>
-<body>
-
-  <!-- Header -->
-  <header>
-    <div class="month-nav">
-      <button class="btn-icon" onclick="changeMonth(-1)">◀</button>
-      <span id="currentMonthLabel">Tháng --/----</span>
-      <button class="btn-icon" onclick="changeMonth(1)">▶</button>
-    </div>
-    <button class="btn-icon" onclick="toggleMenu()" title="Mở Menu">☰</button>
-  </header>
-
-  <!-- Lưới Timeline (Bọc thêm div wrapper để in PDF đẹp hơn) -->
-  <div id="pdfWrapper" style="background: var(--bg); min-height: 100vh;">
-    <!-- Container Bộ Đếm -->
-    <div id="countersContainer" class="counters-container" style="display: none;"></div>
-
-    <main class="timeline" id="timelineContainer"></main>
-  </div>
-
-  <!-- Menu Drawer bên phải -->
-  <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
-  <div class="menu-drawer" id="menuDrawer">
-    <div class="menu-header">
-      <span class="menu-title">Tùy Chọn & Cài Đặt</span>
-      <button class="btn-icon" onclick="toggleMenu()">✕</button>
-    </div>
-
-    <!-- Tài khoản Google -->
-    <div class="user-card">
-      <div id="userInfo" class="user-info">
-        <span>⚪ Đang dùng Offline</span>
-      </div>
-      <button id="authBtn" class="btn-auth" onclick="handleAuth()">Đăng nhập Google</button>
-    </div>
-
-    <!-- Công cụ nhanh -->
-    <div class="menu-group">
-      <span class="menu-label">Công cụ nhanh</span>
-      <button class="menu-item-btn" onclick="openBatchModal()" style="background: var(--primary); color: #fff; border: none;">⚡ Thêm lịch hàng loạt</button>
-      <button class="menu-item-btn" onclick="openBatchDeleteModal()" style="background: #f97316; color: #fff; border: none;">🗑 Xóa lịch hàng loạt</button>
-      <button class="menu-item-btn" onclick="openAddCounterModal()" style="background: #14b8a6; color: #fff; border: none;">⏱ Thêm bộ đếm</button>
-      <button class="menu-item-btn" onclick="openAddCategoryModal()" style="background: var(--tag-nursing); color: #fff; border: none;">➕ Thêm mục mới</button>
-      <button class="menu-item-btn" onclick="exportPDF()" style="background: #ef4444; color: #fff; border: none;">📄 Xuất Lịch ra PDF</button>
-    </div>
-
-    <!-- Tìm kiếm & Bộ lọc -->
-    <div class="menu-group">
-      <span class="menu-label">Tìm kiếm & Bộ lọc</span>
-      <input type="text" id="searchInput" class="menu-search" placeholder="🔍 Tìm ghi chú..." oninput="renderTimeline()">
-      <select id="filterStatus" class="menu-select" onchange="renderTimeline()">
-        <!-- Được JS render động -->
-      </select>
-    </div>
-
-    <!-- Tiện ích -->
-    <div class="menu-group">
-      <span class="menu-label">Cài đặt khác</span>
-      <button class="menu-item-btn" onclick="toggleTheme()">🌓 Đổi Giao Diện Sáng / Tối</button>
-      <button class="menu-item-btn" onclick="requestNotification()">🔔 Bật Nhắc Hẹn</button>
-      <button class="menu-item-btn" onclick="exportData()">📤 Xuất File Dự Phòng (.json)</button>
-      <button class="menu-item-btn" onclick="document.getElementById('importFile').click()">📥 Nhập File Dự Phòng (.json)</button>
-      <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
-    </div>
-  </div>
-
-  <!-- Modal Thêm Bộ Đếm -->
-  <div class="modal" id="addCounterModal">
-    <div class="modal-content">
-      <h3>Thêm Bộ Đếm</h3>
-      <div class="input-group" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
-        <label style="font-size: 0.8rem; color: var(--subtext); font-weight: 500;">Loại bộ đếm</label>
-        <select id="counterMode" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: 0.9rem;">
-          <option value="countdown">⏳ Đếm ngược ngày (Còn bao nhiêu ngày)</option>
-          <option value="count_month">🗓 Đếm số ngày trong tháng này</option>
-        </select>
-      </div>
-      <div class="input-group" style="display: flex; flex-direction: column; gap: 6px;">
-        <label style="font-size: 0.8rem; color: var(--subtext); font-weight: 500;">Chọn mục cần đếm</label>
-        <select id="counterCategory" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: 0.9rem;"></select>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeAddCounterModal()">Hủy</button>
-        <button class="btn btn-primary" onclick="saveCounter()">Thêm</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Chi tiết ngày -->
-  <div class="modal" id="editModal">
-    <div class="modal-content">
-      <h3 id="modalDateLabel">Chi tiết ngày</h3>
-      
-      <div class="slot-row">
-        <div class="slot-col">
-          <label style="font-size: 0.8rem; color: var(--subtext);">Mục 1 (Sáng / Chính)</label>
-          <select id="editType1"></select>
-        </div>
-        <div class="slot-col">
-          <label style="font-size: 0.8rem; color: var(--subtext);">Mục 2 (Tối / Phụ)</label>
-          <select id="editType2"></select>
-        </div>
-      </div>
-
-      <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Ghi chú chi tiết</label>
-        <textarea id="editNote" rows="3" placeholder="Nhập ghi chú chi tiết..."></textarea>
-      </div>
-      <div class="modal-actions" style="justify-content: space-between;">
-        <button class="btn" style="background: #ef4444; color: #fff;" onclick="deleteDayData()">🗑 Xóa</button>
-        <div style="display: flex; gap: 8px;">
-          <button class="btn btn-secondary" onclick="closeModal()">Hủy</button>
-          <button class="btn btn-primary" onclick="saveDayData()">Lưu</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Thêm Hàng Loạt -->
+# 1. Update the Batch Modal HTML
+old_batch_modal = """  <!-- Modal Thêm Hàng Loạt -->
   <div class="modal" id="batchModal">
     <div class="modal-content">
       <h3>Thêm Lịch Hàng Loạt</h3>
-      <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Từ ngày</label>
+      
+      <div class="input-group">
+        <label>Từ ngày</label>
         <input type="date" id="batchStartDate">
       </div>
-      <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Đến ngày</label>
+      
+      <div class="input-group">
+        <label>Đến ngày</label>
         <input type="date" id="batchEndDate">
       </div>
-      <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Áp dụng cho các thứ trong tuần</label>
+      
+      <div class="input-group">
+        <label>Áp dụng cho các thứ trong tuần</label>
         <div class="weekday-selector">
           <input type="checkbox" id="w1" class="weekday-checkbox" checked><label for="w1" class="weekday-label">T2</label>
           <input type="checkbox" id="w2" class="weekday-checkbox" checked><label for="w2" class="weekday-label">T3</label>
@@ -360,611 +31,104 @@
           <input type="checkbox" id="w0" class="weekday-checkbox"><label for="w0" class="weekday-label">CN</label>
         </div>
       </div>
+
       <div class="slot-row">
-        <div class="slot-col">
-          <label style="font-size: 0.8rem; color: var(--subtext);">Mục 1</label>
+        <div class="slot-col input-group">
+          <label>Mục 1</label>
           <select id="batchType1"></select>
         </div>
-        <div class="slot-col">
-          <label style="font-size: 0.8rem; color: var(--subtext);">Mục 2 (Tùy chọn)</label>
+        <div class="slot-col input-group">
+          <label>Mục 2 (Tùy chọn)</label>
           <select id="batchType2"></select>
         </div>
       </div>
-      <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Ghi chú chung (tùy chọn)</label>
-        <textarea id="batchNote" rows="2" placeholder="Ghi chú chung..."></textarea>
+      
+      <div class="input-group">
+        <label>Ghi chú chung (tùy chọn)</label>
+        <textarea id="batchNote" placeholder="Ghi chú chung..."></textarea>
       </div>
+      
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeBatchModal()">Hủy</button>
         <button class="btn btn-primary" onclick="applyBatchSchedule()">Áp dụng</button>
       </div>
     </div>
-  </div>
+  </div>"""
 
-  <!-- Modal Xóa Hàng Loạt -->
-  <div class="modal" id="batchDeleteModal">
+new_batch_modal = """  <!-- Modal Thêm Hàng Loạt -->
+  <div class="modal" id="batchModal">
     <div class="modal-content">
-      <h3>Xóa Lịch Hàng Loạt</h3>
-      <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Từ ngày</label>
-        <input type="date" id="batchDelStartDate">
+      <h3>Thêm Lịch Hàng Loạt</h3>
+
+      <div class="input-group">
+        <label>Cách chọn ngày</label>
+        <select id="batchMode" onchange="toggleBatchMode()">
+          <option value="range">Theo khoảng thời gian & Thứ</option>
+          <option value="specific">Chọn các ngày cụ thể</option>
+        </select>
       </div>
-      <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Đến ngày</label>
-        <input type="date" id="batchDelEndDate">
-      </div>
-      <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Chỉ xóa các thứ sau</label>
-        <div class="weekday-selector">
-          <input type="checkbox" id="dw1" class="weekday-checkbox" checked><label for="dw1" class="weekday-label">T2</label>
-          <input type="checkbox" id="dw2" class="weekday-checkbox" checked><label for="dw2" class="weekday-label">T3</label>
-          <input type="checkbox" id="dw3" class="weekday-checkbox" checked><label for="dw3" class="weekday-label">T4</label>
-          <input type="checkbox" id="dw4" class="weekday-checkbox" checked><label for="dw4" class="weekday-label">T5</label>
-          <input type="checkbox" id="dw5" class="weekday-checkbox" checked><label for="dw5" class="weekday-label">T6</label>
-          <input type="checkbox" id="dw6" class="weekday-checkbox" checked><label for="dw6" class="weekday-label">T7</label>
-          <input type="checkbox" id="dw0" class="weekday-checkbox" checked><label for="dw0" class="weekday-label">CN</label>
+
+      <div id="batchRangeSection">
+        <div class="input-group">
+          <label>Từ ngày</label>
+          <input type="date" id="batchStartDate">
+        </div>
+        
+        <div class="input-group">
+          <label>Đến ngày</label>
+          <input type="date" id="batchEndDate">
+        </div>
+        
+        <div class="input-group">
+          <label>Áp dụng cho các thứ trong tuần</label>
+          <div class="weekday-selector">
+            <input type="checkbox" id="w1" class="weekday-checkbox" checked><label for="w1" class="weekday-label">T2</label>
+            <input type="checkbox" id="w2" class="weekday-checkbox" checked><label for="w2" class="weekday-label">T3</label>
+            <input type="checkbox" id="w3" class="weekday-checkbox" checked><label for="w3" class="weekday-label">T4</label>
+            <input type="checkbox" id="w4" class="weekday-checkbox" checked><label for="w4" class="weekday-label">T5</label>
+            <input type="checkbox" id="w5" class="weekday-checkbox" checked><label for="w5" class="weekday-label">T6</label>
+            <input type="checkbox" id="w6" class="weekday-checkbox"><label for="w6" class="weekday-label">T7</label>
+            <input type="checkbox" id="w0" class="weekday-checkbox"><label for="w0" class="weekday-label">CN</label>
+          </div>
         </div>
       </div>
-      <div class="modal-actions" style="justify-content: space-between;">
-        <button class="btn btn-secondary" onclick="closeBatchDeleteModal()">Hủy</button>
-        <button class="btn" style="background: #ef4444; color: #fff;" onclick="executeBatchDelete()">🗑 Xác nhận Xóa</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Modal Thêm Mục Mới -->
-  <div class="modal" id="addCategoryModal">
-    <div class="modal-content">
-      <h3>Thêm Mục Mới</h3>
-      <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Tên mục</label>
-        <input type="text" id="newCatName" placeholder="VD: Tập Gym, Hẹn hò...">
+      <div id="batchSpecificSection" style="display: none;">
+        <div class="input-group">
+          <label>Các ngày cụ thể (cách nhau bằng dấu phẩy)</label>
+          <input type="text" id="batchSpecificDates" placeholder="VD: 2, 3, 5, 12, 14">
+          <span style="font-size: 0.75rem; color: var(--subtext);">Sẽ áp dụng cho <strong id="batchSpecificMonthLabel" style="color: var(--primary);">Tháng hiện tại</strong></span>
+        </div>
       </div>
-      <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Icon (Dùng Emoji)</label>
-        <input type="text" id="newCatIcon" placeholder="VD: 💪">
+
+      <div class="slot-row">
+        <div class="slot-col input-group">
+          <label>Mục 1</label>
+          <select id="batchType1"></select>
+        </div>
+        <div class="slot-col input-group">
+          <label>Mục 2 (Tùy chọn)</label>
+          <select id="batchType2"></select>
+        </div>
       </div>
-      <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Màu nền (Chọn màu bạn thích)</label>
-        <input type="color" id="newCatColor" value="#ec4899" style="height: 40px; padding: 2px;">
+      
+      <div class="input-group">
+        <label>Ghi chú chung (tùy chọn)</label>
+        <textarea id="batchNote" placeholder="Ghi chú chung..."></textarea>
       </div>
+      
       <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeAddCategoryModal()">Hủy</button>
-        <button class="btn btn-primary" onclick="saveCategory()">Tạo mới</button>
+        <button class="btn btn-secondary" onclick="closeBatchModal()">Hủy</button>
+        <button class="btn btn-primary" onclick="applyBatchSchedule()">Áp dụng</button>
       </div>
     </div>
-  </div>
+  </div>"""
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyD4dt1u-HycuI3o_cJkz7DIIu3O3R0LLa4",
-      authDomain: "self-chedule.firebaseapp.com",
-      projectId: "self-chedule",
-      storageBucket: "self-chedule.firebasestorage.app",
-      messagingSenderId: "253003587609",
-      appId: "1:253003587609:web:f6ea16ac99de6fe869ca88",
-      measurementId: "G-TZ6V01F3N0"
-    };
+code = code.replace(old_batch_modal, new_batch_modal)
 
-    let db = null;
-    let auth = null;
-    let currentUser = null;
-    let unsubscribeSnapshot = null;
 
-    try {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.firestore();
-      auth = firebase.auth();
-      db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log(err));
-    } catch (e) {
-      console.error("Lỗi Firebase:", e);
-    }
-
-    // Các mục mặc định của bạn
-    const defaultStatusMap = {
-      school: { text: "Đi học", icon: "📖", bgClass: "bg-school", hex: "#8b5cf6" },
-      nursing: { text: "Viện dưỡng lão", icon: "👴", bgClass: "bg-nursing", hex: "#10b981" },
-      lawson: { text: "Lawson", icon: "📦", bgClass: "bg-lawson", hex: "#0284c7" },
-      outing: { text: "Đi chơi", icon: "👟", bgClass: "bg-outing", hex: "#f59e0b" }
-    };
-
-    let customCategories = JSON.parse(localStorage.getItem("custom_categories") || "{}");
-    let userCounters = JSON.parse(localStorage.getItem("user_counters") || "[]");
-    let statusMap = {};
-
-    function buildStatusMap() {
-      // Nối danh sách mặc định và tùy chọn
-      statusMap = { 
-        empty: { text: "Trống", icon: "⛅️", bgClass: "bg-empty", hex: "#8FABD4" },
-        ...defaultStatusMap
-      };
-      for (let key in customCategories) {
-        statusMap[key] = {
-          text: customCategories[key].text,
-          icon: customCategories[key].icon,
-          bgClass: `bg-${key}`
-        };
-      }
-    }
-
-    function renderDynamicStyles() {
-      let styleStr = "";
-      for (let key in customCategories) {
-        styleStr += `
-          .bg-${key} { background: ${customCategories[key].color} !important; }
-        `;
-      }
-      document.getElementById('dynamicStyles').innerHTML = styleStr;
-    }
-
-    function populateSelect(selectId, includeNone, isFilter) {
-      const el = document.getElementById(selectId);
-      if (!el) return;
-      
-      const currentVal = el.value; // giữ giá trị cũ nếu đang chọn
-      el.innerHTML = "";
-
-      if (isFilter) {
-        el.innerHTML += `<option value="all">Tất cả lịch</option>`;
-      }
-
-      if (includeNone) {
-        el.innerHTML += `<option value="none">-- Không có --</option>`;
-      } else if (selectId !== 'filterStatus') {
-        let emptyText = (selectId.startsWith('batch')) ? "⚪ Xóa về Trống" : "⛅️ Trống";
-        el.innerHTML += `<option value="empty">${emptyText}</option>`;
-      } else {
-        el.innerHTML += `<option value="empty">⛅️ Trống</option>`;
-      }
-
-      // Default
-      Object.keys(defaultStatusMap).forEach(key => {
-        el.innerHTML += `<option value="${key}">${defaultStatusMap[key].icon} ${defaultStatusMap[key].text}</option>`;
-      });
-
-      // Custom
-      Object.keys(customCategories).forEach(key => {
-        el.innerHTML += `<option value="${key}">${customCategories[key].icon} ${customCategories[key].text}</option>`;
-      });
-
-      if(currentVal) el.value = currentVal;
-    }
-
-    function renderAllSelects() {
-      populateSelect('filterStatus', false, true);
-      populateSelect('editType1', false, false);
-      populateSelect('editType2', true, false);
-      populateSelect('batchType1', false, false);
-      populateSelect('batchType2', true, false);
-      populateSelect('counterCategory', false, false);
-    }
-
-    // Khởi tạo trạng thái danh sách ban đầu
-    buildStatusMap();
-    renderDynamicStyles();
-    renderAllSelects();
-
-    // Tính ngày nghỉ lễ Nhật Bản
-    function getJapanHolidayName(year, month, day) {
-      const m = month + 1;
-      const d = day;
-      const dObj = new Date(year, month, day);
-      const dayOfWeek = dObj.getDay();
-      const nthMonday = Math.ceil(d / 7);
-
-      if (m === 1 && d === 1) return "Tết Dương lịch (元日)";
-      if (m === 2 && d === 11) return "Quốc khánh (建国記念の日)";
-      if (m === 2 && d === 23) return "Sinh nhật Nhật Hoàng (天皇誕生日)";
-      if (m === 4 && d === 29) return "Ngày Chiêu Hòa (昭和の日)";
-      if (m === 5 && d === 3) return "Ngày Hiến pháp (憲法記念日)";
-      if (m === 5 && d === 4) return "Ngày Cây xanh (みどりの日)";
-      if (m === 5 && d === 5) return "Tết Thiếu nhi (こどもの日)";
-      if (m === 8 && d === 11) return "Ngày Núi (山の日)";
-      if (m === 11 && d === 3) return "Ngày Văn hóa (文化の日)";
-      if (m === 11 && d === 23) return "Ngày Cảm tạ lao động (勤労感謝の日)";
-
-      if (m === 1 && dayOfWeek === 1 && nthMonday === 2) return "Lễ Thành nhân (成人の日)";
-      if (m === 7 && dayOfWeek === 1 && nthMonday === 3) return "Ngày của Biển (海の日)";
-      if (m === 9 && dayOfWeek === 1 && nthMonday === 3) return "Ngày Kính lão (敬老の日)";
-      if (m === 10 && dayOfWeek === 1 && nthMonday === 2) return "Ngày Thể thao (スポーツの日)";
-
-      if (m === 3 && d === Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4))) return "Xuân phân (春分の日)";
-      if (m === 9 && d === Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4))) return "Thu phân (秋分の日)";
-
-      if (dayOfWeek === 1) {
-        const prevDay = new Date(year, month, day - 1);
-        const prevHoliday = getJapanHolidayName(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate());
-        if (prevHoliday && !prevHoliday.includes("Nghỉ bù")) return `Nghỉ bù (${prevHoliday})`;
-      }
-      return null;
-    }
-
-    let currentDate = new Date();
-    let eventsData = JSON.parse(localStorage.getItem("calendar_events") || "{}");
-    let selectedDateKey = null;
-
-    function toggleMenu() {
-      document.getElementById("menuOverlay").classList.toggle("active");
-      document.getElementById("menuDrawer").classList.toggle("active");
-    }
-
-    if (auth) {
-      auth.onAuthStateChanged(user => {
-        currentUser = user;
-        const userInfoDiv = document.getElementById("userInfo");
-        const authBtn = document.getElementById("authBtn");
-
-        if (user) {
-          userInfoDiv.innerHTML = `
-            <img src="${user.photoURL || 'https://via.placeholder.com/32'}" class="user-avatar" />
-            <span>${escapeHtml(user.displayName || user.email)}</span>
-          `;
-          authBtn.innerText = "Đăng xuất";
-          authBtn.style.background = "#ef4444";
-          listenToCloudChanges(user.uid);
-        } else {
-          userInfoDiv.innerHTML = `<span>⚪ Dùng Offline (Chưa đăng nhập)</span>`;
-          authBtn.innerText = "Đăng nhập Google";
-          authBtn.style.background = "var(--primary)";
-          if (unsubscribeSnapshot) unsubscribeSnapshot();
-        }
-      });
-    }
-
-    function handleAuth() {
-      if (!auth) return;
-      if (currentUser) {
-        auth.signOut();
-      } else {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).catch(error => {
-          if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-            auth.signInWithRedirect(provider);
-          } else {
-            alert("Lỗi đăng nhập: " + error.message);
-          }
-        });
-      }
-    }
-
-    function listenToCloudChanges(uid) {
-      if (!db) return;
-      if (unsubscribeSnapshot) unsubscribeSnapshot();
-
-      const userDocRef = db.collection("users").doc(uid);
-      unsubscribeSnapshot = userDocRef.onSnapshot(doc => {
-        if (doc.exists) {
-          const data = doc.data();
-          eventsData = data.events || {};
-          
-          if (data.categories) {
-            customCategories = data.categories;
-            localStorage.setItem("custom_categories", JSON.stringify(customCategories));
-            buildStatusMap();
-            renderDynamicStyles();
-            renderAllSelects();
-          }
-          if (data.counters) {
-            userCounters = data.counters;
-            localStorage.setItem("user_counters", JSON.stringify(userCounters));
-          }
-
-          localStorage.setItem("calendar_events", JSON.stringify(eventsData));
-          renderTimeline();
-        } else {
-          userDocRef.set({ events: eventsData, categories: customCategories }, { merge: true });
-        }
-      }, err => console.log("Lỗi snapshot:", err));
-    }
-
-    function saveToStorage() {
-      localStorage.setItem("calendar_events", JSON.stringify(eventsData));
-      if (currentUser && db) {
-        db.collection("users").doc(currentUser.uid).set({
-          events: eventsData,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).catch(err => console.error("Lỗi đồng bộ Cloud:", err));
-      }
-    }
-
-    function saveCategoriesToStorage() {
-      localStorage.setItem("custom_categories", JSON.stringify(customCategories));
-      if (currentUser && db) {
-        db.collection("users").doc(currentUser.uid).set({
-          categories: customCategories,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).catch(err => console.error("Lỗi đồng bộ Cloud Categories:", err));
-      }
-    }
-
-    function toggleTheme() {
-      const isDark = document.body.getAttribute("data-theme") === "dark";
-      document.body.setAttribute("data-theme", isDark ? "light" : "dark");
-      localStorage.setItem("theme", isDark ? "light" : "dark");
-    }
-
-    if (localStorage.getItem("theme") === "dark") {
-      document.body.setAttribute("data-theme", "dark");
-    }
-
-    function saveCountersToStorage() {
-      localStorage.setItem("user_counters", JSON.stringify(userCounters));
-      if (currentUser && db) {
-        db.collection("users").doc(currentUser.uid).set({
-          counters: userCounters,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).catch(err => console.error("Lỗi đồng bộ Cloud Counters:", err));
-      }
-    }
-
-    function openAddCounterModal() {
-      toggleMenu();
-      document.getElementById("addCounterModal").classList.add("active");
-    }
-    function closeAddCounterModal() {
-      document.getElementById("addCounterModal").classList.remove("active");
-    }
-    function saveCounter() {
-      const mode = document.getElementById("counterMode").value;
-      const cat = document.getElementById("counterCategory").value;
-      userCounters.push({ mode: mode, category: cat, id: Date.now() });
-      saveCountersToStorage();
-      closeAddCounterModal();
-      renderCounters();
-    }
-    function deleteCounter(index) {
-      if(confirm("Xóa bộ đếm này?")) {
-        userCounters.splice(index, 1);
-        saveCountersToStorage();
-        renderCounters();
-      }
-    }
-
-    function renderCounters() {
-      const container = document.getElementById("countersContainer");
-      if (!container) return;
-      container.innerHTML = "";
-      
-      if (userCounters.length === 0) {
-        container.style.display = "none";
-        return;
-      }
-      container.style.display = "flex";
-
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      const totalDays = new Date(year, month + 1, 0).getDate();
-
-      let today = new Date();
-      today.setHours(0,0,0,0);
-
-      userCounters.forEach((counter, index) => {
-        const cat = counter.category;
-        const mode = counter.mode;
-        const statusInfo = statusMap[cat] || statusMap.empty;
-        const hexColor = statusInfo.hex || statusInfo.color || "#8FABD4";
-
-        let valueText = "";
-        
-        if (mode === "countdown") {
-          let daysLeft = -1;
-          for(let i = 0; i <= 365; i++) {
-            let d = new Date(today);
-            d.setDate(today.getDate() + i);
-            let dk = formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
-            let rawData = eventsData[dk] || { type1: "empty", type2: "none" };
-            let t1 = rawData.type1 || rawData.type || "empty";
-            let t2 = rawData.type2 || "none";
-            
-            if (t1 === cat || t2 === cat) {
-              daysLeft = i;
-              break;
-            }
-          }
-          if (daysLeft === -1) valueText = "Chưa có";
-          else if (daysLeft === 0) valueText = "Hôm nay";
-          else if (daysLeft === 1) valueText = "Ngày mai";
-          else valueText = `Còn ${daysLeft} ngày`;
-        } 
-        else if (mode === "count_month") {
-          let count = 0;
-          for (let day = 1; day <= totalDays; day++) {
-            let dk = formatDateKey(year, month, day);
-            let rawData = eventsData[dk] || { type1: "empty", type2: "none" };
-            let t1 = rawData.type1 || rawData.type || "empty";
-            let t2 = rawData.type2 || "none";
-            if (t1 === cat || t2 === cat) count++;
-          }
-          valueText = `${count} ngày`;
-        }
-
-        const titleText = mode === "countdown" ? "⏳ Đếm ngược" : "🗓 Tháng này";
-        
-        const widget = document.createElement("div");
-        widget.className = "counter-widget";
-        widget.style.borderLeftColor = hexColor;
-        widget.innerHTML = `
-          <button class="del-btn" onclick="deleteCounter(${index})" title="Xóa bộ đếm">✕</button>
-          <div class="counter-title">${titleText}</div>
-          <div class="counter-value">${valueText}</div>
-          <div class="counter-cat"><span style="font-size:1.05rem">${statusInfo.icon}</span> <span style="color:${hexColor}">${statusInfo.text}</span></div>
-        `;
-        container.appendChild(widget);
-      });
-    }
-
-    function changeMonth(offset) {
-      currentDate.setMonth(currentDate.getMonth() + offset);
-      renderTimeline();
-    }
-
-    function formatDateKey(year, month, day) {
-      return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    }
-
-    function renderTimeline() {
-      const container = document.getElementById("timelineContainer");
-      container.innerHTML = "";
-
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      document.getElementById("currentMonthLabel").innerText = `Tháng ${String(month + 1).padStart(2, '0')}/${year}`;
-
-      const totalDays = new Date(year, month + 1, 0).getDate();
-      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
-      const filterType = document.getElementById("filterStatus").value;
-
-      const now = new Date();
-      const todayStr = formatDateKey(now.getFullYear(), now.getMonth(), now.getDate());
-      const weekdays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
-
-      for (let day = 1; day <= totalDays; day++) {
-        const dateKey = formatDateKey(year, month, day);
-        const rawData = eventsData[dateKey] || { type: "empty", note: "" };
-        
-        const type1 = rawData.type1 || rawData.type || "empty";
-        const type2 = rawData.type2 || "none";
-        const note = rawData.note || "";
-
-        const dayOfWeek = weekdays[new Date(year, month, day).getDay()];
-        const holidayName = getJapanHolidayName(year, month, day);
-
-        if (filterType !== "all") {
-          if (type1 !== filterType && type2 !== filterType) continue;
-        }
-        if (searchQuery && !note.toLowerCase().includes(searchQuery)) continue;
-
-        const card = document.createElement("div");
-        card.className = `day-card ${dateKey === todayStr ? "today" : ""}`;
-        card.onclick = () => openModal(dateKey, year, month, day);
-
-        const status1 = statusMap[type1] || statusMap.empty;
-        const status2 = (type2 !== "none" && statusMap[type2]) ? statusMap[type2] : null;
-
-        let dateBgClass = "bg-empty";
-        if (type1 !== "empty") {
-          dateBgClass = status1.bgClass;
-        } else if (holidayName) {
-          dateBgClass = "bg-holiday";
-        }
-
-        let infoHtml = "";
-        if (status2) {
-          infoHtml = `
-            <div class="info-item ${status1.bgClass}">
-              <span>${status1.icon}</span> <span>${status1.text}</span>
-            </div>
-            <div class="info-item ${status2.bgClass}">
-              <span>${status2.icon}</span> <span>${status2.text}</span>
-            </div>
-          `;
-        } else {
-          infoHtml = `
-            <div class="info-single ${dateBgClass}">
-              <span class="info-icon">${status1.icon}</span>
-              <span class="info-title">${status1.text}</span>
-              ${holidayName ? `<span class="holiday-subtext">🎌 ${holidayName}</span>` : ''}
-            </div>
-          `;
-        }
-
-        card.innerHTML = `
-          <div class="left-badge ${dateBgClass}">
-            <div class="date-section ${dateBgClass}">
-              <span class="date-num">${String(day).padStart(2, '0')}</span>
-              <span class="date-weekday">${dayOfWeek}</span>
-            </div>
-            <div class="divider-line"></div>
-            <div class="info-section">
-              ${infoHtml}
-            </div>
-          </div>
-          <div class="note-section">
-            ${note ? escapeHtml(note) : '<span class="note-placeholder"></span>'}
-          </div>
-        `;
-        container.appendChild(card);
-      }
-      renderCounters();
-    }
-
-    function openModal(dateKey, y, m, d) {
-      selectedDateKey = dateKey;
-      document.getElementById("modalDateLabel").innerText = `Ngày ${d}/${m + 1}/${y}`;
-      const rawData = eventsData[dateKey] || { type: "empty", note: "" };
-      
-      document.getElementById("editType1").value = rawData.type1 || rawData.type || "empty";
-      document.getElementById("editType2").value = rawData.type2 || "none";
-      document.getElementById("editNote").value = rawData.note || "";
-      document.getElementById("editModal").classList.add("active");
-    }
-
-    function closeModal() {
-      document.getElementById("editModal").classList.remove("active");
-    }
-
-    function saveDayData() {
-      if (!selectedDateKey) return;
-      const type1 = document.getElementById("editType1").value;
-      const type2 = document.getElementById("editType2").value;
-      const note = document.getElementById("editNote").value.trim();
-
-      if (type1 === "empty" && type2 === "none" && !note) {
-        eventsData[selectedDateKey] = { type1: "empty", type2: "none", note: "" };
-      } else {
-        eventsData[selectedDateKey] = { type1, type2, note };
-      }
-
-      saveToStorage();
-      closeModal();
-      renderTimeline();
-    }
-
-    function deleteDayData() {
-      if (!selectedDateKey) return;
-      if (confirm("Bạn có chắc chắn muốn xóa trống lịch của ngày này không?")) {
-        eventsData[selectedDateKey] = { type1: "empty", type2: "none", note: "" };
-        saveToStorage();
-        closeModal();
-        renderTimeline();
-      }
-    }
-
-    /* Modal Thêm Mục Mới */
-    function openAddCategoryModal() {
-      toggleMenu();
-      document.getElementById("addCategoryModal").classList.add("active");
-    }
-    function closeAddCategoryModal() {
-      document.getElementById("addCategoryModal").classList.remove("active");
-    }
-    function saveCategory() {
-      const name = document.getElementById("newCatName").value.trim();
-      const icon = document.getElementById("newCatIcon").value.trim();
-      const color = document.getElementById("newCatColor").value;
-
-      if (!name || !icon) {
-        alert("Vui lòng nhập đủ tên mục và Emoji!");
-        return;
-      }
-
-      const id = "custom_" + Date.now();
-      customCategories[id] = { text: name, icon: icon, color: color };
-
-      saveCategoriesToStorage();
-      buildStatusMap();
-      renderDynamicStyles();
-      renderAllSelects();
-      renderTimeline();
-      
-      document.getElementById("newCatName").value = "";
-      document.getElementById("newCatIcon").value = "";
-      closeAddCategoryModal();
-      alert(`Đã thêm mục "${name}" thành công!`);
-    }
-
-    /* Modal Thêm Hàng Loạt */
-    function openBatchModal() {
+# 2. Update openBatchModal function
+old_open_batch = """    function openBatchModal() {
       toggleMenu();
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
@@ -974,13 +138,36 @@
       document.getElementById("batchStartDate").value = firstDay;
       document.getElementById("batchEndDate").value = lastDay;
       document.getElementById("batchModal").classList.add("active");
+    }"""
+
+new_open_batch = """    function toggleBatchMode() {
+      const mode = document.getElementById("batchMode").value;
+      if (mode === "range") {
+        document.getElementById("batchRangeSection").style.display = "block";
+        document.getElementById("batchSpecificSection").style.display = "none";
+      } else {
+        document.getElementById("batchRangeSection").style.display = "none";
+        document.getElementById("batchSpecificSection").style.display = "block";
+      }
     }
 
-    function closeBatchModal() {
-      document.getElementById("batchModal").classList.remove("active");
-    }
+    function openBatchModal() {
+      toggleMenu();
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const firstDay = formatDateKey(year, month, 1);
+      const lastDay = formatDateKey(year, month, new Date(year, month + 1, 0).getDate());
+      
+      document.getElementById("batchStartDate").value = firstDay;
+      document.getElementById("batchEndDate").value = lastDay;
+      document.getElementById("batchSpecificMonthLabel").innerText = document.getElementById("currentMonthLabel").innerText;
+      document.getElementById("batchModal").classList.add("active");
+    }"""
 
-    function applyBatchSchedule() {
+code = code.replace(old_open_batch, new_open_batch)
+
+# 3. Update applyBatchSchedule logic
+old_apply = """    function applyBatchSchedule() {
       const startVal = document.getElementById("batchStartDate").value;
       const endVal = document.getElementById("batchEndDate").value;
       const type1 = document.getElementById("batchType1").value;
@@ -1040,147 +227,92 @@
       closeBatchModal();
       renderTimeline();
       alert(`Đã cập nhật xong! (${count} ngày đã được đặt lịch).`);
-    }
+    }"""
 
-    /* Modal Xóa Hàng Loạt */
-    function openBatchDeleteModal() {
-      toggleMenu();
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      const firstDay = formatDateKey(year, month, 1);
-      const lastDay = formatDateKey(year, month, new Date(year, month + 1, 0).getDate());
-      
-      document.getElementById("batchDelStartDate").value = firstDay;
-      document.getElementById("batchDelEndDate").value = lastDay;
-      document.getElementById("batchDeleteModal").classList.add("active");
-    }
+new_apply = """    function applyBatchSchedule() {
+      const mode = document.getElementById("batchMode").value;
+      const type1 = document.getElementById("batchType1").value;
+      const type2 = document.getElementById("batchType2").value;
+      const note = document.getElementById("batchNote").value.trim();
+      const skipHolidays = true; // Luôn luôn tự động bỏ qua ngày lễ
 
-    function closeBatchDeleteModal() {
-      document.getElementById("batchDeleteModal").classList.remove("active");
-    }
-
-    function executeBatchDelete() {
-      const startVal = document.getElementById("batchDelStartDate").value;
-      const endVal = document.getElementById("batchDelEndDate").value;
-
-      if (!startVal || !endVal) {
-        alert("Vui lòng chọn ngày bắt đầu và kết thúc!");
-        return;
-      }
-
-      const startDate = new Date(startVal);
-      const endDate = new Date(endVal);
-
-      if (startDate > endDate) {
-        alert("Ngày bắt đầu không được lớn hơn ngày kết thúc!");
-        return;
-      }
-
-      if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa trống toàn bộ lịch trong khoảng thời gian và các thứ đã chọn không? Hành động này không thể hoàn tác!")) {
-        return;
-      }
-
-      const selectedWeekdays = [];
-      for (let i = 0; i <= 6; i++) {
-        if (document.getElementById(`dw${i}`).checked) {
-          selectedWeekdays.push(i);
-        }
-      }
-
-      let curr = new Date(startDate);
       let count = 0;
 
-      while (curr <= endDate) {
-        const y = curr.getFullYear();
-        const m = curr.getMonth();
-        const d = curr.getDate();
-        const dayOfWeek = curr.getDay();
+      if (mode === "range") {
+        const startVal = document.getElementById("batchStartDate").value;
+        const endVal = document.getElementById("batchEndDate").value;
+        if (!startVal || !endVal) { alert("Vui lòng chọn ngày bắt đầu và ngày kết thúc!"); return; }
+        const startDate = new Date(startVal);
+        const endDate = new Date(endVal);
+        if (startDate > endDate) { alert("Ngày bắt đầu không được lớn hơn ngày kết thúc!"); return; }
 
-        if (selectedWeekdays.includes(dayOfWeek)) {
-          const dateKey = formatDateKey(y, m, d);
-          if (eventsData[dateKey]) {
+        const selectedWeekdays = [];
+        for (let i = 0; i <= 6; i++) {
+          if (document.getElementById(`w${i}`).checked) selectedWeekdays.push(i);
+        }
+
+        let curr = new Date(startDate);
+        while (curr <= endDate) {
+          const y = curr.getFullYear();
+          const m = curr.getMonth();
+          const d = curr.getDate();
+          const dayOfWeek = curr.getDay();
+
+          if (selectedWeekdays.includes(dayOfWeek)) {
+            const holidayName = getJapanHolidayName(y, m, d);
+            if (skipHolidays && holidayName) {
+              const dateKey = formatDateKey(y, m, d);
+              eventsData[dateKey] = { type1: "empty", type2: "none", note: "" };
+            } else {
+              const dateKey = formatDateKey(y, m, d);
+              if (type1 === "empty" && type2 === "none" && !note) {
+                eventsData[dateKey] = { type1: "empty", type2: "none", note: "" };
+              } else {
+                eventsData[dateKey] = { type1, type2, note };
+              }
+              count++;
+            }
+          }
+          curr.setDate(curr.getDate() + 1);
+        }
+      } else {
+        // Specific dates
+        const datesStr = document.getElementById("batchSpecificDates").value;
+        if (!datesStr) { alert("Vui lòng nhập các ngày cụ thể!"); return; }
+        
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        const daysArr = datesStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= totalDaysInMonth);
+        if (daysArr.length === 0) { alert("Không có ngày nào hợp lệ trong tháng này!"); return; }
+
+        for (let d of daysArr) {
+          const holidayName = getJapanHolidayName(year, month, d);
+          if (skipHolidays && holidayName) {
+            const dateKey = formatDateKey(year, month, d);
             eventsData[dateKey] = { type1: "empty", type2: "none", note: "" };
+          } else {
+            const dateKey = formatDateKey(year, month, d);
+            if (type1 === "empty" && type2 === "none" && !note) {
+              eventsData[dateKey] = { type1: "empty", type2: "none", note: "" };
+            } else {
+              eventsData[dateKey] = { type1, type2, note };
+            }
             count++;
           }
         }
-        curr.setDate(curr.getDate() + 1);
       }
 
       saveToStorage();
-      closeBatchDeleteModal();
+      closeBatchModal();
       renderTimeline();
-      alert(`Đã dọn dẹp sạch sẽ lịch của ${count} ngày!`);
-    }
+      alert(`Đã cập nhật xong! (${count} ngày đã được đặt lịch).`);
+    }"""
 
-    function escapeHtml(text) {
-      const div = document.createElement("div");
-      div.innerText = text;
-      return div.innerHTML;
-    }
+code = code.replace(old_apply, new_apply)
 
-    /* Xuất File JSON */
-    function exportData() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(eventsData, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `calendar_backup_${new Date().toISOString().slice(0,10)}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-    }
+with open("index_specific_dates.html", "w", encoding="utf-8") as f:
+    f.write(code)
 
-    function importData(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          eventsData = JSON.parse(e.target.result);
-          saveToStorage();
-          renderTimeline();
-          alert("Nhập dữ liệu thành công!");
-        } catch (err) {
-          alert("File không hợp lệ!");
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    /* Xuất file PDF */
-    function exportPDF() {
-      toggleMenu(); // Đóng menu
-      // Thêm một chút delay để UI menu ẩn hẳn rồi mới chụp PDF
-      setTimeout(() => {
-        const element = document.getElementById('pdfWrapper');
-        const monthLabel = document.getElementById('currentMonthLabel').innerText.replace('/', '-');
-        
-        const opt = {
-          margin:       [10, 5, 10, 5],
-          filename:     `Lich_${monthLabel}.pdf`,
-          image:        { type: 'jpeg', quality: 0.98 },
-          html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak:    { mode: 'css', before: '#page2el' }
-        };
-
-        html2pdf().set(opt).from(element).save().then(() => {
-          // Thông báo khi tải xong
-          console.log("Xuất PDF thành công!");
-        });
-      }, 300);
-    }
-
-    function requestNotification() {
-      if ("Notification" in window) {
-        Notification.requestPermission().then(permission => {
-          if (permission === "granted") {
-            new Notification("Lịch Cá Nhân", { body: "Đã bật thông báo nhắc hẹn thành công!" });
-          }
-        });
-      }
-    }
-
-    renderTimeline();
-  </script>
-</body>
-</html>
+print("Added specific dates selector functionality")
