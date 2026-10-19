@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Lịch Cá Nhân</title>
+  <title id="pageTitle">Lịch Cá Nhân</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-icon" href="https://via.placeholder.com/192.png?text=L%E1%BB%8Bch">
@@ -44,16 +44,30 @@
       --holiday-color: #f43f5e;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Myanmar Text", sans-serif; }
     body { background: var(--bg); color: var(--text); padding-bottom: 30px; }
 
     header {
       position: sticky; top: 0; background: var(--card-bg); border-bottom: 1px solid var(--border);
-      padding: 12px 16px; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      padding: 10px 14px; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       display: flex; justify-content: space-between; align-items: center;
     }
-    .month-nav { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 1.15rem; }
+    .month-nav { display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 1.1rem; }
     .btn-icon { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--text); padding: 6px; }
+
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .view-switch-group {
+      display: flex; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 2px;
+    }
+    .view-switch-btn {
+      background: none; border: none; padding: 5px 9px; border-radius: 6px;
+      cursor: pointer; font-size: 0.95rem; color: var(--subtext); transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .view-switch-btn.active {
+      background: var(--primary); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
 
     /* Drawer Menu */
     .menu-overlay {
@@ -110,7 +124,7 @@
     .day-card:active { transform: scale(0.98); }
     .day-card.today { border: 2px solid var(--primary); }
 
-    /* Khối Màu Bên Trái */
+    /* Khối Màu Bên Trái (Timeline) */
     .left-badge {
       display: flex; align-items: stretch; color: #fff; background: var(--tag-empty);
       min-width: 170px; max-width: 190px; flex-shrink: 0;
@@ -147,12 +161,75 @@
     .bg-empty { background: var(--tag-empty); }
     .bg-holiday { background: var(--holiday-color); }
 
-    /* Khối Ghi chú Bên Phải */
+    /* Khối Ghi chú Bên Phải (Timeline) */
     .note-section {
       flex: 1; padding: 10px 14px; display: flex; align-items: center;
       font-size: 0.9rem; color: var(--text); white-space: pre-wrap; word-break: break-word; line-height: 1.35;
     }
     .note-placeholder { color: var(--subtext); font-style: italic; font-size: 0.85rem; opacity: 0.7; }
+
+    /* Chế độ xem Lưới tháng (Grid Month View) */
+    .grid-calendar {
+      max-width: 800px; margin: 16px auto; padding: 0 10px;
+    }
+    .grid-weekdays-header {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; text-align: center;
+    }
+    .grid-weekday-title {
+      padding: 6px 2px; border-radius: 6px; background: var(--card-bg); border: 1px solid var(--border);
+      font-size: 0.8rem; font-weight: 700; color: var(--text);
+    }
+    .grid-weekday-title.sat { color: #0284c7; }
+    .grid-weekday-title.sun { color: var(--holiday-color); }
+
+    .grid-cells-container {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    }
+    .grid-day-cell {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+      min-height: 82px; padding: 5px 4px; display: flex; flex-direction: column; cursor: pointer;
+      position: relative; overflow: hidden; transition: transform 0.1s, box-shadow 0.15s, border-color 0.15s;
+      page-break-inside: avoid; break-inside: avoid;
+    }
+    .grid-day-cell:active { transform: scale(0.97); }
+    .grid-day-cell.other-month { opacity: 0.3; background: transparent; pointer-events: none; }
+    .grid-day-cell.today { border: 2px solid var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+    .grid-day-cell.dimmed { opacity: 0.25; filter: grayscale(1); }
+
+    .grid-day-header {
+      display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px;
+    }
+    .grid-day-num {
+      font-size: 1rem; font-weight: 700; font-family: "Times New Roman", Georgia, serif; line-height: 1;
+    }
+    .grid-day-num.holiday, .grid-day-num.sunday { color: var(--holiday-color); }
+    .grid-day-num.saturday { color: #0284c7; }
+
+    .grid-holiday-tag {
+      font-size: 0.62rem; font-weight: 700; color: var(--holiday-color);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65px;
+    }
+    .grid-events {
+      display: flex; flex-direction: column; gap: 3px; flex: 1;
+    }
+    .grid-badge {
+      color: #fff; border-radius: 4px; padding: 2px 4px; font-size: 0.72rem; font-weight: 600;
+      display: flex; align-items: center; gap: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.15;
+    }
+    .grid-badge span.badge-text { overflow: hidden; text-overflow: ellipsis; }
+    .grid-note-preview {
+      font-size: 0.65rem; color: var(--subtext); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: auto; padding-top: 2px;
+    }
+
+    @media (max-width: 480px) {
+      .grid-calendar { padding: 0 4px; }
+      .grid-cells-container { gap: 3px; }
+      .grid-day-cell { min-height: 70px; padding: 4px 2px; }
+      .grid-day-num { font-size: 0.9rem; }
+      .grid-badge { font-size: 0.68rem; padding: 2px 3px; }
+      .grid-badge span.badge-text { display: none; } /* Chỉ hiện icon trên màn hình quá nhỏ */
+      .grid-holiday-tag { font-size: 0.58rem; }
+    }
 
     /* Modal */
     .modal {
@@ -213,10 +290,7 @@
     .counter-cat { font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px;}
 
   </style>
-  <style id="dynamicStyles">
-
-
-  </style>
+  <style id="dynamicStyles"></style>
 </head>
 <body>
 
@@ -224,62 +298,84 @@
   <header>
     <div class="month-nav">
       <button class="btn-icon" onclick="changeMonth(-1)">◀</button>
-      <span id="currentMonthLabel">Tháng --/----</span>
+      <span id="currentMonthLabel">--/----</span>
       <button class="btn-icon" onclick="changeMonth(1)">▶</button>
     </div>
-    <button class="btn-icon" onclick="toggleMenu()" title="Mở Menu">☰</button>
+    <div class="header-actions">
+      <!-- Switch Chế độ xem: Danh sách vs Lưới tháng -->
+      <div class="view-switch-group">
+        <button id="viewTimelineBtn" class="view-switch-btn active" onclick="switchView('timeline')" title="Dạng danh sách">📋</button>
+        <button id="viewGridBtn" class="view-switch-btn" onclick="switchView('grid')" title="Dạng lưới tháng">📅</button>
+      </div>
+      <button class="btn-icon" onclick="toggleMenu()" title="Mở Menu">☰</button>
+    </div>
   </header>
 
-  <!-- Lưới Timeline (Bọc thêm div wrapper để in PDF đẹp hơn) -->
+  <!-- Lưới Timeline / Lưới tháng (Bọc div wrapper để in PDF đẹp hơn) -->
   <div id="pdfWrapper" style="background: var(--bg); min-height: 100vh;">
     <!-- Container Bộ Đếm -->
     <div id="countersContainer" class="counters-container" style="display: none;"></div>
 
+    <!-- Dạng Danh sách cuộn dọc -->
     <main class="timeline" id="timelineContainer"></main>
+
+    <!-- Dạng Lưới tháng (Grid Month View) -->
+    <div class="grid-calendar" id="gridCalendarContainer" style="display: none;"></div>
   </div>
 
   <!-- Menu Drawer bên phải -->
   <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
   <div class="menu-drawer" id="menuDrawer">
     <div class="menu-header">
-      <span class="menu-title">Tùy Chọn & Cài Đặt</span>
+      <span class="menu-title" id="lblMenuTitle">Tùy Chọn & Cài Đặt</span>
       <button class="btn-icon" onclick="toggleMenu()">✕</button>
     </div>
 
     <!-- Tài khoản Google -->
     <div class="user-card">
       <div id="userInfo" class="user-info">
-        <span>⚪ Đang dùng Offline</span>
+        <span id="lblUserOffline">⚪ Đang dùng Offline</span>
       </div>
       <button id="authBtn" class="btn-auth" onclick="handleAuth()">Đăng nhập Google</button>
     </div>
 
+    <!-- Chọn Ngôn ngữ (i18n) -->
+    <div class="menu-group">
+      <span class="menu-label" id="lblLanguage">🌐 Ngôn ngữ / Language</span>
+      <select id="langSelect" class="menu-select" onchange="changeLanguage(this.value)">
+        <option value="vi">🇻🇳 Tiếng Việt</option>
+        <option value="ja">🇯🇵 日本語</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="my">🇲🇲 မြန်မာစာ</option>
+      </select>
+    </div>
+
     <!-- Công cụ nhanh -->
     <div class="menu-group">
-      <span class="menu-label">Công cụ nhanh</span>
-      <button class="menu-item-btn" onclick="openBatchModal()" style="background: var(--primary); color: #fff; border: none;">⚡ Thêm lịch hàng loạt</button>
-      <button class="menu-item-btn" onclick="openBatchDeleteModal()" style="background: #f97316; color: #fff; border: none;">🗑 Xóa lịch hàng loạt</button>
-      <button class="menu-item-btn" onclick="openAddCounterModal()" style="background: #14b8a6; color: #fff; border: none;">⏱ Thêm bộ đếm</button>
-      <button class="menu-item-btn" onclick="openAddCategoryModal()" style="background: var(--tag-nursing); color: #fff; border: none;">➕ Thêm mục mới</button>
-      <button class="menu-item-btn" onclick="exportPDF()" style="background: #ef4444; color: #fff; border: none;">📄 Xuất Lịch ra PDF</button>
+      <span class="menu-label" id="lblMenuQuick">Công cụ nhanh</span>
+      <button class="menu-item-btn" id="btnBatchAdd" onclick="openBatchModal()" style="background: var(--primary); color: #fff; border: none;">⚡ Thêm lịch hàng loạt</button>
+      <button class="menu-item-btn" id="btnBatchDel" onclick="openBatchDeleteModal()" style="background: #f97316; color: #fff; border: none;">🗑 Xóa lịch hàng loạt</button>
+      <button class="menu-item-btn" id="btnAddCounter" onclick="openAddCounterModal()" style="background: #14b8a6; color: #fff; border: none;">⏱ Thêm bộ đếm</button>
+      <button class="menu-item-btn" id="btnAddCategory" onclick="openAddCategoryModal()" style="background: var(--tag-nursing); color: #fff; border: none;">➕ Thêm mục mới</button>
+      <button class="menu-item-btn" id="btnExportPdf" onclick="exportPDF()" style="background: #ef4444; color: #fff; border: none;">📄 Xuất Lịch ra PDF</button>
     </div>
 
     <!-- Tìm kiếm & Bộ lọc -->
     <div class="menu-group">
-      <span class="menu-label">Tìm kiếm & Bộ lọc</span>
-      <input type="text" id="searchInput" class="menu-search" placeholder="🔍 Tìm ghi chú..." oninput="renderTimeline()">
-      <select id="filterStatus" class="menu-select" onchange="renderTimeline()">
-        <!-- Được JS render động -->
+      <span class="menu-label" id="lblMenuFilter">Tìm kiếm & Bộ lọc</span>
+      <input type="text" id="searchInput" class="menu-search" placeholder="🔍 Tìm ghi chú..." oninput="renderCurrentView()">
+      <select id="filterStatus" class="menu-select" onchange="renderCurrentView()">
+        <!-- Render động -->
       </select>
     </div>
 
-    <!-- Tiện ích -->
+    <!-- Tiện ích & Cài đặt khác -->
     <div class="menu-group">
-      <span class="menu-label">Cài đặt khác</span>
-      <button class="menu-item-btn" onclick="toggleTheme()">🌓 Đổi Giao Diện Sáng / Tối</button>
-      <button class="menu-item-btn" onclick="requestNotification()">🔔 Bật Nhắc Hẹn</button>
-      <button class="menu-item-btn" onclick="exportData()">📤 Xuất File Dự Phòng (.json)</button>
-      <button class="menu-item-btn" onclick="document.getElementById('importFile').click()">📥 Nhập File Dự Phòng (.json)</button>
+      <span class="menu-label" id="lblMenuOther">Cài đặt khác</span>
+      <button class="menu-item-btn" id="btnToggleTheme" onclick="toggleTheme()">🌓 Đổi Giao Diện Sáng / Tối</button>
+      <button class="menu-item-btn" id="btnRequestNotif" onclick="requestNotification()">🔔 Bật Nhắc Hẹn</button>
+      <button class="menu-item-btn" id="btnExportData" onclick="exportData()">📤 Xuất File Dự Phòng (.json)</button>
+      <button class="menu-item-btn" id="btnImportData" onclick="document.getElementById('importFile').click()">📥 Nhập File Dự Phòng (.json)</button>
       <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
     </div>
   </div>
@@ -291,24 +387,24 @@
       
       <div class="slot-row">
         <div class="slot-col">
-          <label style="font-size: 0.8rem; color: var(--subtext);">Mục 1 (Sáng / Chính)</label>
+          <label id="lblSlot1" style="font-size: 0.8rem; color: var(--subtext);">Mục 1 (Sáng / Chính)</label>
           <select id="editType1"></select>
         </div>
         <div class="slot-col">
-          <label style="font-size: 0.8rem; color: var(--subtext);">Mục 2 (Tối / Phụ)</label>
+          <label id="lblSlot2" style="font-size: 0.8rem; color: var(--subtext);">Mục 2 (Tối / Phụ)</label>
           <select id="editType2"></select>
         </div>
       </div>
 
       <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Ghi chú chi tiết</label>
+        <label id="lblDetailNote" style="font-size: 0.8rem; color: var(--subtext);">Ghi chú chi tiết</label>
         <textarea id="editNote" rows="3" placeholder="Nhập ghi chú chi tiết..."></textarea>
       </div>
       <div class="modal-actions" style="justify-content: space-between;">
-        <button class="btn" style="background: #ef4444; color: #fff;" onclick="deleteDayData()">🗑 Xóa</button>
+        <button class="btn" id="btnModalDelete" style="background: #ef4444; color: #fff;" onclick="deleteDayData()">🗑 Xóa</button>
         <div style="display: flex; gap: 8px;">
-          <button class="btn btn-secondary" onclick="closeModal()">Hủy</button>
-          <button class="btn btn-primary" onclick="saveDayData()">Lưu</button>
+          <button class="btn btn-secondary" id="btnModalCancel" onclick="closeModal()">Hủy</button>
+          <button class="btn btn-primary" id="btnModalSave" onclick="saveDayData()">Lưu</button>
         </div>
       </div>
     </div>
@@ -317,68 +413,68 @@
   <!-- Modal Thêm Hàng Loạt -->
   <div class="modal" id="batchModal">
     <div class="modal-content">
-      <h3>Thêm Lịch Hàng Loạt</h3>
+      <h3 id="lblBatchAddTitle">Thêm Lịch Hàng Loạt</h3>
 
       <div class="input-group">
-        <label>Cách chọn ngày</label>
+        <label id="lblBatchMode">Cách chọn ngày</label>
         <select id="batchMode" onchange="toggleBatchMode()">
-          <option value="range">Theo khoảng thời gian & Thứ</option>
-          <option value="specific">Chọn các ngày cụ thể</option>
+          <option value="range" id="optBatchRange">Theo khoảng thời gian & Thứ</option>
+          <option value="specific" id="optBatchSpecific">Chọn các ngày cụ thể</option>
         </select>
       </div>
 
       <div id="batchRangeSection">
         <div class="input-group">
-          <label>Từ ngày</label>
+          <label id="lblBatchFrom">Từ ngày</label>
           <input type="date" id="batchStartDate">
         </div>
         
         <div class="input-group">
-          <label>Đến ngày</label>
+          <label id="lblBatchTo">Đến ngày</label>
           <input type="date" id="batchEndDate">
         </div>
         
         <div class="input-group">
-          <label>Áp dụng cho các thứ trong tuần</label>
+          <label id="lblBatchWeekdays">Áp dụng cho các thứ trong tuần</label>
           <div class="weekday-selector">
-            <input type="checkbox" id="w1" class="weekday-checkbox" checked><label for="w1" class="weekday-label">T2</label>
-            <input type="checkbox" id="w2" class="weekday-checkbox" checked><label for="w2" class="weekday-label">T3</label>
-            <input type="checkbox" id="w3" class="weekday-checkbox" checked><label for="w3" class="weekday-label">T4</label>
-            <input type="checkbox" id="w4" class="weekday-checkbox" checked><label for="w4" class="weekday-label">T5</label>
-            <input type="checkbox" id="w5" class="weekday-checkbox" checked><label for="w5" class="weekday-label">T6</label>
-            <input type="checkbox" id="w6" class="weekday-checkbox"><label for="w6" class="weekday-label">T7</label>
-            <input type="checkbox" id="w0" class="weekday-checkbox"><label for="w0" class="weekday-label">CN</label>
+            <input type="checkbox" id="w1" class="weekday-checkbox" checked><label for="w1" id="lblW1" class="weekday-label">T2</label>
+            <input type="checkbox" id="w2" class="weekday-checkbox" checked><label for="w2" id="lblW2" class="weekday-label">T3</label>
+            <input type="checkbox" id="w3" class="weekday-checkbox" checked><label for="w3" id="lblW3" class="weekday-label">T4</label>
+            <input type="checkbox" id="w4" class="weekday-checkbox" checked><label for="w4" id="lblW4" class="weekday-label">T5</label>
+            <input type="checkbox" id="w5" class="weekday-checkbox" checked><label for="w5" id="lblW5" class="weekday-label">T6</label>
+            <input type="checkbox" id="w6" class="weekday-checkbox"><label for="w6" id="lblW6" class="weekday-label">T7</label>
+            <input type="checkbox" id="w0" class="weekday-checkbox"><label for="w0" id="lblW0" class="weekday-label">CN</label>
           </div>
         </div>
       </div>
 
       <div id="batchSpecificSection" style="display: none;">
         <div class="input-group">
-          <label>Các ngày cụ thể (cách nhau bằng dấu phẩy)</label>
+          <label id="lblBatchSpecificInput">Các ngày cụ thể (cách nhau bằng dấu phẩy)</label>
           <input type="text" id="batchSpecificDates" placeholder="VD: 2, 3, 5, 12, 14">
-          <span style="font-size: 0.75rem; color: var(--subtext);">Sẽ áp dụng cho <strong id="batchSpecificMonthLabel" style="color: var(--primary);">Tháng hiện tại</strong></span>
+          <span style="font-size: 0.75rem; color: var(--subtext);"><span id="lblBatchApplyForMonth">Sẽ áp dụng cho</span> <strong id="batchSpecificMonthLabel" style="color: var(--primary);">Tháng hiện tại</strong></span>
         </div>
       </div>
 
       <div class="slot-row">
         <div class="slot-col input-group">
-          <label>Mục 1</label>
+          <label id="lblBatchSlot1">Mục 1</label>
           <select id="batchType1"></select>
         </div>
         <div class="slot-col input-group">
-          <label>Mục 2 (Tùy chọn)</label>
+          <label id="lblBatchSlot2">Mục 2 (Tùy chọn)</label>
           <select id="batchType2"></select>
         </div>
       </div>
       
       <div class="input-group">
-        <label>Ghi chú chung (tùy chọn)</label>
+        <label id="lblBatchNote">Ghi chú chung (tùy chọn)</label>
         <textarea id="batchNote" placeholder="Ghi chú chung..."></textarea>
       </div>
       
       <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeBatchModal()">Hủy</button>
-        <button class="btn btn-primary" onclick="applyBatchSchedule()">Áp dụng</button>
+        <button class="btn btn-secondary" id="btnBatchCancel" onclick="closeBatchModal()">Hủy</button>
+        <button class="btn btn-primary" id="btnBatchApply" onclick="applyBatchSchedule()">Áp dụng</button>
       </div>
     </div>
   </div>
@@ -386,30 +482,30 @@
   <!-- Modal Xóa Hàng Loạt -->
   <div class="modal" id="batchDeleteModal">
     <div class="modal-content">
-      <h3>Xóa Lịch Hàng Loạt</h3>
+      <h3 id="lblBatchDelTitle">Xóa Lịch Hàng Loạt</h3>
       <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Từ ngày</label>
+        <label id="lblDelFrom" style="font-size: 0.8rem; color: var(--subtext);">Từ ngày</label>
         <input type="date" id="batchDelStartDate">
       </div>
       <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Đến ngày</label>
+        <label id="lblDelTo" style="font-size: 0.8rem; color: var(--subtext);">Đến ngày</label>
         <input type="date" id="batchDelEndDate">
       </div>
       <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Chỉ xóa các thứ sau</label>
+        <label id="lblDelWeekdays" style="font-size: 0.8rem; color: var(--subtext);">Chỉ xóa các thứ sau</label>
         <div class="weekday-selector">
-          <input type="checkbox" id="dw1" class="weekday-checkbox" checked><label for="dw1" class="weekday-label">T2</label>
-          <input type="checkbox" id="dw2" class="weekday-checkbox" checked><label for="dw2" class="weekday-label">T3</label>
-          <input type="checkbox" id="dw3" class="weekday-checkbox" checked><label for="dw3" class="weekday-label">T4</label>
-          <input type="checkbox" id="dw4" class="weekday-checkbox" checked><label for="dw4" class="weekday-label">T5</label>
-          <input type="checkbox" id="dw5" class="weekday-checkbox" checked><label for="dw5" class="weekday-label">T6</label>
-          <input type="checkbox" id="dw6" class="weekday-checkbox" checked><label for="dw6" class="weekday-label">T7</label>
-          <input type="checkbox" id="dw0" class="weekday-checkbox" checked><label for="dw0" class="weekday-label">CN</label>
+          <input type="checkbox" id="dw1" class="weekday-checkbox" checked><label for="dw1" id="lblDW1" class="weekday-label">T2</label>
+          <input type="checkbox" id="dw2" class="weekday-checkbox" checked><label for="dw2" id="lblDW2" class="weekday-label">T3</label>
+          <input type="checkbox" id="dw3" class="weekday-checkbox" checked><label for="dw3" id="lblDW3" class="weekday-label">T4</label>
+          <input type="checkbox" id="dw4" class="weekday-checkbox" checked><label for="dw4" id="lblDW4" class="weekday-label">T5</label>
+          <input type="checkbox" id="dw5" class="weekday-checkbox" checked><label for="dw5" id="lblDW5" class="weekday-label">T6</label>
+          <input type="checkbox" id="dw6" class="weekday-checkbox" checked><label for="dw6" id="lblDW6" class="weekday-label">T7</label>
+          <input type="checkbox" id="dw0" class="weekday-checkbox" checked><label for="dw0" id="lblDW0" class="weekday-label">CN</label>
         </div>
       </div>
       <div class="modal-actions" style="justify-content: space-between;">
-        <button class="btn btn-secondary" onclick="closeBatchDeleteModal()">Hủy</button>
-        <button class="btn" style="background: #ef4444; color: #fff;" onclick="executeBatchDelete()">🗑 Xác nhận Xóa</button>
+        <button class="btn btn-secondary" id="btnDelCancel" onclick="closeBatchDeleteModal()">Hủy</button>
+        <button class="btn" id="btnDelConfirm" style="background: #ef4444; color: #fff;" onclick="executeBatchDelete()">🗑 Xác nhận Xóa</button>
       </div>
     </div>
   </div>
@@ -417,21 +513,21 @@
   <!-- Modal Thêm Bộ Đếm -->
   <div class="modal" id="addCounterModal">
     <div class="modal-content">
-      <h3>Thêm Bộ Đếm</h3>
+      <h3 id="lblCounterModalTitle">Thêm Bộ Đếm</h3>
       <div class="input-group" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
-        <label style="font-size: 0.8rem; color: var(--subtext); font-weight: 500;">Loại bộ đếm</label>
+        <label id="lblCounterType" style="font-size: 0.8rem; color: var(--subtext); font-weight: 500;">Loại bộ đếm</label>
         <select id="counterMode" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: 0.9rem;">
-          <option value="countdown">⏳ Đếm ngược ngày (Còn bao nhiêu ngày)</option>
-          <option value="count_month">🗓 Đếm số ngày trong tháng này</option>
+          <option value="countdown" id="optCounterCountdown">⏳ Đếm ngược ngày (Còn bao nhiêu ngày)</option>
+          <option value="count_month" id="optCounterMonth">🗓 Đếm số ngày trong tháng này</option>
         </select>
       </div>
       <div class="input-group" style="display: flex; flex-direction: column; gap: 6px;">
-        <label style="font-size: 0.8rem; color: var(--subtext); font-weight: 500;">Chọn mục cần đếm</label>
+        <label id="lblCounterCategory" style="font-size: 0.8rem; color: var(--subtext); font-weight: 500;">Chọn mục cần đếm</label>
         <select id="counterCategory" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: 0.9rem;"></select>
       </div>
       <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeAddCounterModal()">Hủy</button>
-        <button class="btn btn-primary" onclick="saveCounter()">Thêm</button>
+        <button class="btn btn-secondary" id="btnCounterCancel" onclick="closeAddCounterModal()">Hủy</button>
+        <button class="btn btn-primary" id="btnCounterSave" onclick="saveCounter()">Thêm</button>
       </div>
     </div>
   </div>
@@ -439,27 +535,466 @@
   <!-- Modal Thêm Mục Mới -->
   <div class="modal" id="addCategoryModal">
     <div class="modal-content">
-      <h3>Thêm Mục Mới</h3>
+      <h3 id="lblCatModalTitle">Thêm Mục Mới</h3>
       <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Tên mục</label>
+        <label id="lblCatName" style="font-size: 0.8rem; color: var(--subtext);">Tên mục</label>
         <input type="text" id="newCatName" placeholder="VD: Tập Gym, Hẹn hò...">
       </div>
       <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Icon (Dùng Emoji)</label>
+        <label id="lblCatIcon" style="font-size: 0.8rem; color: var(--subtext);">Icon (Dùng Emoji)</label>
         <input type="text" id="newCatIcon" placeholder="VD: 💪">
       </div>
       <div>
-        <label style="font-size: 0.8rem; color: var(--subtext);">Màu nền (Chọn màu bạn thích)</label>
+        <label id="lblCatColor" style="font-size: 0.8rem; color: var(--subtext);">Màu nền (Chọn màu bạn thích)</label>
         <input type="color" id="newCatColor" value="#ec4899" style="height: 40px; padding: 2px;">
       </div>
       <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeAddCategoryModal()">Hủy</button>
-        <button class="btn btn-primary" onclick="saveCategory()">Tạo mới</button>
+        <button class="btn btn-secondary" id="btnCatCancel" onclick="closeAddCategoryModal()">Hủy</button>
+        <button class="btn btn-primary" id="btnCatSave" onclick="saveCategory()">Tạo mới</button>
       </div>
     </div>
   </div>
 
   <script>
+    /* ========================================================
+       1. HỆ THỐNG ĐA NGÔN NGỮ (i18n: vi, ja, en, my)
+       ======================================================== */
+    const I18N = {
+      vi: {
+        app_title: "Lịch Cá Nhân",
+        offline_user: "⚪ Đang dùng Offline (Chưa đăng nhập)",
+        btn_login: "Đăng nhập Google",
+        btn_logout: "Đăng xuất",
+        menu_title: "Tùy Chọn & Cài Đặt",
+        language_label: "🌐 Ngôn ngữ / Language",
+        quick_tools: "Công cụ nhanh",
+        btn_batch_add: "⚡ Thêm lịch hàng loạt",
+        btn_batch_del: "🗑 Xóa lịch hàng loạt",
+        btn_add_counter: "⏱ Thêm bộ đếm",
+        btn_add_category: "➕ Thêm mục mới",
+        btn_export_pdf: "📄 Xuất Lịch ra PDF",
+        search_filter: "Tìm kiếm & Bộ lọc",
+        search_placeholder: "🔍 Tìm ghi chú...",
+        all_events: "Tất cả lịch",
+        other_settings: "Cài đặt khác",
+        toggle_theme: "🌓 Đổi Giao Diện Sáng / Tối",
+        enable_reminders: "🔔 Bật Nhắc Hẹn",
+        export_backup: "📤 Xuất File Dự Phòng (.json)",
+        import_backup: "📥 Nhập File Dự Phòng (.json)",
+        modal_date_detail: "Chi tiết ngày",
+        slot_1_label: "Mục 1 (Sáng / Chính)",
+        slot_2_label: "Mục 2 (Tối / Phụ)",
+        note_label: "Ghi chú chi tiết",
+        note_placeholder: "Nhập ghi chú chi tiết...",
+        btn_delete: "🗑 Xóa",
+        btn_cancel: "Hủy",
+        btn_save: "Lưu",
+        btn_apply: "Áp dụng",
+        btn_create: "Tạo mới",
+        btn_add: "Thêm",
+        btn_confirm_del: "🗑 Xác nhận Xóa",
+        batch_add_title: "Thêm Lịch Hàng Loạt",
+        batch_mode_label: "Cách chọn ngày",
+        batch_mode_range: "Theo khoảng thời gian & Thứ",
+        batch_mode_specific: "Chọn các ngày cụ thể",
+        from_date: "Từ ngày",
+        to_date: "Đến ngày",
+        apply_weekdays: "Áp dụng cho các thứ trong tuần",
+        specific_days_label: "Các ngày cụ thể (cách nhau bằng dấu phẩy)",
+        apply_for_month: "Sẽ áp dụng cho",
+        batch_note_placeholder: "Ghi chú chung...",
+        batch_del_title: "Xóa Lịch Hàng Loạt",
+        batch_del_weekdays: "Chỉ xóa các thứ sau",
+        counter_title_modal: "Thêm Bộ Đếm",
+        counter_type_label: "Loại bộ đếm",
+        counter_mode_countdown: "⏳ Đếm ngược ngày (Còn bao nhiêu ngày)",
+        counter_mode_month: "🗓 Đếm số ngày trong tháng này",
+        select_category: "Chọn mục cần đếm",
+        category_modal_title: "Thêm Mục Mới",
+        category_name_label: "Tên mục",
+        category_icon_label: "Icon (Dùng Emoji)",
+        category_color_label: "Màu nền (Chọn màu bạn thích)",
+        opt_none: "-- Không có --",
+        opt_empty: "⛅️ Trống",
+        opt_clear_to_empty: "⚪ Xóa về Trống",
+        countdown_title: "⏳ Đếm ngược",
+        month_count_title: "🗓 Tháng này",
+        today: "Hôm nay",
+        tomorrow: "Ngày mai",
+        days_left: "Còn {n} ngày",
+        days_count: "{n} ngày",
+        no_event_found: "Chưa có",
+        weekdays: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
+        confirm_del_day: "Bạn có chắc chắn muốn xóa trống lịch của ngày này không?",
+        confirm_del_counter: "Xóa bộ đếm này?",
+        confirm_batch_del: "⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa trống toàn bộ lịch trong khoảng thời gian và các thứ đã chọn không? Hành động này không thể hoàn tác!",
+        batch_added_msg: "Đã cập nhật xong! ({count} ngày đã được đặt lịch).",
+        batch_deleted_msg: "Đã dọn dẹp sạch sẽ lịch của {count} ngày!",
+        alert_select_dates: "Vui lòng chọn ngày bắt đầu và ngày kết thúc!",
+        alert_date_invalid: "Ngày bắt đầu không được lớn hơn ngày kết thúc!",
+        alert_specific_invalid: "Vui lòng nhập các ngày cụ thể hợp lệ trong tháng này!",
+        alert_fill_cat: "Vui lòng nhập đủ tên mục và Emoji!",
+        cat_created_msg: "Đã thêm mục \"{name}\" thành công!",
+        import_success: "Nhập dữ liệu thành công!",
+        import_error: "File không hợp lệ!",
+        notif_enabled: "Đã bật thông báo nhắc hẹn thành công!",
+        format_month: (y, m) => `Tháng ${String(m + 1).padStart(2, '0')}/${y}`,
+        format_date_label: (y, m, d) => `Ngày ${d}/${m + 1}/${y}`,
+        default_cats: {
+          empty: "Trống", school: "Đi học", nursing: "Viện dưỡng lão", lawson: "Lawson", outing: "Đi chơi"
+        }
+      },
+
+      ja: {
+        app_title: "個人スケジュール",
+        offline_user: "⚪ オフライン使用中（未ログイン）",
+        btn_login: "Googleでログイン",
+        btn_logout: "ログアウト",
+        menu_title: "設定・オプション",
+        language_label: "🌐 言語 / Language",
+        quick_tools: "クイックツール",
+        btn_batch_add: "⚡ スケジュール一括登録",
+        btn_batch_del: "🗑 スケジュール一括削除",
+        btn_add_counter: "⏱ カウンター追加",
+        btn_add_category: "➕ 新しいカテゴリー追加",
+        btn_export_pdf: "📄 カレンダーをPDF出力",
+        search_filter: "検索とフィルター",
+        search_placeholder: "🔍 メモを検索...",
+        all_events: "すべての予定",
+        other_settings: "その他の設定",
+        toggle_theme: "🌓 テーマ切替（明/暗）",
+        enable_reminders: "🔔 リマインダーを有効化",
+        export_backup: "📤 バックアップを出力 (.json)",
+        import_backup: "📥 バックアップを復元 (.json)",
+        modal_date_detail: "日付の詳細",
+        slot_1_label: "項目1（午前 / メイン）",
+        slot_2_label: "項目2（夜 / サブ）",
+        note_label: "詳細メモ",
+        note_placeholder: "メモを入力...",
+        btn_delete: "🗑 削除",
+        btn_cancel: "キャンセル",
+        btn_save: "保存",
+        btn_apply: "適用",
+        btn_create: "作成",
+        btn_add: "追加",
+        btn_confirm_del: "🗑 削除を実行",
+        batch_add_title: "スケジュール一括登録",
+        batch_mode_label: "日付の選択方法",
+        batch_mode_range: "期間と曜日で指定",
+        batch_mode_specific: "特定の日付を指定",
+        from_date: "開始日",
+        to_date: "終了日",
+        apply_weekdays: "適用する曜日",
+        specific_days_label: "特定の日付（カンマ区切り、例: 2, 3, 5）",
+        apply_for_month: "適用対象:",
+        batch_note_placeholder: "共通メモ...",
+        batch_del_title: "スケジュール一括削除",
+        batch_del_weekdays: "削除する曜日",
+        counter_title_modal: "カウンター追加",
+        counter_type_label: "カウンターの種類",
+        counter_mode_countdown: "⏳ カウントダウン（あと何日）",
+        counter_mode_month: "🗓 今月の合計日数をカウント",
+        select_category: "カウントするカテゴリーを選択",
+        category_modal_title: "新しいカテゴリー追加",
+        category_name_label: "カテゴリー名",
+        category_icon_label: "アイコン（絵文字を使用）",
+        category_color_label: "背景色（お好みの色）",
+        opt_none: "-- なし --",
+        opt_empty: "⛅️ 空き",
+        opt_clear_to_empty: "⚪ 空きに戻す",
+        countdown_title: "⏳ カウントダウン",
+        month_count_title: "🗓 今月",
+        today: "今日",
+        tomorrow: "明日",
+        days_left: "あと{n}日",
+        days_count: "{n}日",
+        no_event_found: "予定なし",
+        weekdays: ["日", "月", "火", "水", "木", "金", "土"],
+        confirm_del_day: "この日の予定を消去してもよろしいですか？",
+        confirm_del_counter: "このカウンターを削除しますか？",
+        confirm_batch_del: "⚠️ 警告: 選択した期間と曜日のすべての予定を削除してもよろしいですか？この操作は元に戻せません！",
+        batch_added_msg: "更新完了！（{count}日分の予定を設定しました）",
+        batch_deleted_msg: "{count}日分の予定を削除しました！",
+        alert_select_dates: "開始日と終了日を選択してください！",
+        alert_date_invalid: "開始日は終了日以前にしてください！",
+        alert_specific_invalid: "有効な日付を入力してください！",
+        alert_fill_cat: "カテゴリー名とアイコンを入力してください！",
+        cat_created_msg: "カテゴリー「{name}」を作成しました！",
+        import_success: "データの復元に成功しました！",
+        import_error: "無効なファイルです！",
+        notif_enabled: "リマインダー通知を有効にしました！",
+        format_month: (y, m) => `${y}年 ${m + 1}月`,
+        format_date_label: (y, m, d) => `${y}年${m + 1}月${d}日`,
+        default_cats: {
+          empty: "空き", school: "学校", nursing: "介護施設", lawson: "ローソン", outing: "外出"
+        }
+      },
+
+      en: {
+        app_title: "Personal Calendar",
+        offline_user: "⚪ Offline Mode (Not signed in)",
+        btn_login: "Sign in with Google",
+        btn_logout: "Sign out",
+        menu_title: "Options & Settings",
+        language_label: "🌐 Language",
+        quick_tools: "Quick Tools",
+        btn_batch_add: "⚡ Batch Add Events",
+        btn_batch_del: "🗑 Batch Delete Events",
+        btn_add_counter: "⏱ Add Counter",
+        btn_add_category: "➕ Add New Category",
+        btn_export_pdf: "📄 Export to PDF",
+        search_filter: "Search & Filter",
+        search_placeholder: "🔍 Search notes...",
+        all_events: "All events",
+        other_settings: "Other Settings",
+        toggle_theme: "🌓 Toggle Light/Dark Mode",
+        enable_reminders: "🔔 Enable Reminders",
+        export_backup: "📤 Export Backup (.json)",
+        import_backup: "📥 Import Backup (.json)",
+        modal_date_detail: "Day Details",
+        slot_1_label: "Slot 1 (Morning / Main)",
+        slot_2_label: "Slot 2 (Evening / Sub)",
+        note_label: "Notes",
+        note_placeholder: "Enter notes...",
+        btn_delete: "🗑 Delete",
+        btn_cancel: "Cancel",
+        btn_save: "Save",
+        btn_apply: "Apply",
+        btn_create: "Create",
+        btn_add: "Add",
+        btn_confirm_del: "🗑 Confirm Delete",
+        batch_add_title: "Batch Add Events",
+        batch_mode_label: "Date selection mode",
+        batch_mode_range: "By Date Range & Weekdays",
+        batch_mode_specific: "Specific Days of Month",
+        from_date: "From",
+        to_date: "To",
+        apply_weekdays: "Apply to weekdays",
+        specific_days_label: "Specific days (comma separated, e.g. 2, 3, 5)",
+        apply_for_month: "Will apply to:",
+        batch_note_placeholder: "General note...",
+        batch_del_title: "Batch Delete Events",
+        batch_del_weekdays: "Delete only these weekdays",
+        counter_title_modal: "Add Counter",
+        counter_type_label: "Counter type",
+        counter_mode_countdown: "⏳ Countdown (Days remaining)",
+        counter_mode_month: "🗓 Count days in this month",
+        select_category: "Select category to count",
+        category_modal_title: "Add New Category",
+        category_name_label: "Category Name",
+        category_icon_label: "Icon (Use Emoji)",
+        category_color_label: "Background Color",
+        opt_none: "-- None --",
+        opt_empty: "⛅️ Empty",
+        opt_clear_to_empty: "⚪ Reset to Empty",
+        countdown_title: "⏳ Countdown",
+        month_count_title: "🗓 This Month",
+        today: "Today",
+        tomorrow: "Tomorrow",
+        days_left: "{n} days left",
+        days_count: "{n} days",
+        no_event_found: "None",
+        weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        confirm_del_day: "Are you sure you want to clear events for this day?",
+        confirm_del_counter: "Delete this counter?",
+        confirm_batch_del: "⚠️ WARNING: Are you sure you want to delete all events in the selected range and weekdays? This cannot be undone!",
+        batch_added_msg: "Updated successfully! ({count} days scheduled).",
+        batch_deleted_msg: "Cleared schedule for {count} days!",
+        alert_select_dates: "Please select start and end dates!",
+        alert_date_invalid: "Start date cannot be after end date!",
+        alert_specific_invalid: "Please enter valid days for this month!",
+        alert_fill_cat: "Please enter both category name and emoji icon!",
+        cat_created_msg: "Category \"{name}\" created successfully!",
+        import_success: "Data imported successfully!",
+        import_error: "Invalid file!",
+        notif_enabled: "Reminder notifications enabled successfully!",
+        format_month: (y, m) => {
+          const names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+          return `${names[m]} ${y}`;
+        },
+        format_date_label: (y, m, d) => `${m + 1}/${d}/${y}`,
+        default_cats: {
+          empty: "Empty", school: "School", nursing: "Nursing Home", lawson: "Lawson", outing: "Outing"
+        }
+      },
+
+      my: {
+        app_title: "ကိုယ်ပိုင် ပြက္ခဒိန်",
+        offline_user: "⚪ အော့ဖ်လိုင်းသုံးနေသည် (အကောင့်မဝင်ထားပါ)",
+        btn_login: "Google ဖြင့် ဝင်ရန်",
+        btn_logout: "အကောင့်ထွက်ရန်",
+        menu_title: "ရွေးချယ်စရာနှင့် ဆက်တင်များ",
+        language_label: "🌐 ဘာသာစကား / Language",
+        quick_tools: "အမြန်ကိရိယာများ",
+        btn_batch_add: "⚡ တစ်သုတ်တည်း ထည့်ရန်",
+        btn_batch_del: "🗑 တစ်သုတ်တည်း ဖျက်ရန်",
+        btn_add_counter: "⏱ ကောင်တာထည့်ရန်",
+        btn_add_category: "➕ အမျိုးအစားသစ် ထည့်ရန်",
+        btn_export_pdf: "📄 PDF ထုတ်ယူရန်",
+        search_filter: "ရှာဖွေခြင်းနှင့် စစ်ထုတ်ခြင်း",
+        search_placeholder: "🔍 မှတ်စုရှာရန်...",
+        all_events: "အစီအစဉ်အားလုံး",
+        other_settings: "အခြား ဆက်တင်များ",
+        toggle_theme: "🌓 အလင်း/အမှောင် ပြောင်းရန်",
+        enable_reminders: "🔔 သတိပေးချက်ဖွင့်ရန်",
+        export_backup: "📤 အရန်သိမ်းဆည်းမှု ထုတ်ရန် (.json)",
+        import_backup: "📥 အရန်သိမ်းဆည်းမှု ထည့်ရန် (.json)",
+        modal_date_detail: "နေ့စွဲအသေးစိတ်",
+        slot_1_label: "အပိုင်း ၁ (နံနက် / အဓိက)",
+        slot_2_label: "အပိုင်း ၂ (ညနေ / အရန်)",
+        note_label: "အသေးစိတ်မှတ်စု",
+        note_placeholder: "မှတ်စုရေးပါ...",
+        btn_delete: "🗑 ဖျက်မည်",
+        btn_cancel: "ပယ်ဖျက်",
+        btn_save: "သိမ်းမည်",
+        btn_apply: "ဆောင်ရွက်မည်",
+        btn_create: "ဖန်တီးမည်",
+        btn_add: "ထည့်မည်",
+        btn_confirm_del: "🗑 ဖျက်မည်ကို အတည်ပြုပါ",
+        batch_add_title: "တစ်သုတ်တည်း ထည့်ရန်",
+        batch_mode_label: "ရက်ရွေးချယ်ပုံစံ",
+        batch_mode_range: "ရက်စွဲအပိုင်းအခြားနှင့် ရက်သတ္တပတ်ဖြင့်",
+        batch_mode_specific: "သတ်မှတ်ရက်များဖြင့်",
+        from_date: "စတင်မည့်ရက်",
+        to_date: "ပြီးဆုံးမည့်ရက်",
+        apply_weekdays: "အကျုံးဝင်မည့် ရက်သတ္တပတ်များ",
+        specific_days_label: "ရက်စွဲများ (ကော်မာဖြင့် ခြားပါ၊ ဥပမာ: 2, 3, 5)",
+        apply_for_month: "အကျိုးသက်ရောက်မည့်လ:",
+        batch_note_placeholder: "အထွေထွေမှတ်စု...",
+        batch_del_title: "တစ်သုတ်တည်း ဖျက်ရန်",
+        batch_del_weekdays: "ဖျက်မည့် ရက်သတ္တပတ်များ",
+        counter_title_modal: "ကောင်တာထည့်ရန်",
+        counter_type_label: "ကောင်တာအမျိုးအစား",
+        counter_mode_countdown: "⏳ လက်ကျန်ရက် ရေတွက်ခြင်း",
+        counter_mode_month: "🗓 ယခုလအတွင်း ရက်အရေအတွက် ရေတွက်ခြင်း",
+        select_category: "ရေတွက်မည့် အမျိုးအစားကို ရွေးပါ",
+        category_modal_title: "အမျိုးအစားသစ် ထည့်ရန်",
+        category_name_label: "အမျိုးအစား အမည်",
+        category_icon_label: "အိုင်ကွန် (Emoji သုံးပါ)",
+        category_color_label: "နောက်ခံအရောင်",
+        opt_none: "-- မရှိပါ --",
+        opt_empty: "⛅️ အားသည်",
+        opt_clear_to_empty: "⚪ အားလပ်ရက်အဖြစ် ပြန်ထားမည်",
+        countdown_title: "⏳ လက်ကျန်ရက်",
+        month_count_title: "🗓 ယခုလ",
+        today: "ယနေ့",
+        tomorrow: "မနက်ဖြန်",
+        days_left: "{n} ရက်ကျန်သည်",
+        days_count: "{n} ရက်",
+        no_event_found: "မရှိပါ",
+        weekdays: ["နွေ", "လာ", "ဂါ", "ဟူး", "တေး", "ကြာ", "နေ"],
+        confirm_del_day: "ဤနေ့၏ အစီအစဉ်များကို ဖျက်ရန် သေချာပါသလား။",
+        confirm_del_counter: "ဤကောင်တာကို ဖျက်မည်လား။",
+        confirm_batch_del: "⚠️ သတိပေးချက်- ရွေးချယ်ထားသော ကာလနှင့် ရက်များရှိ အစီအစဉ်အားလုံးကို ဖျက်ရန် သေချာပါသလား။ ဤလုပ်ဆောင်ချက်ကို ပြန်ပြင်၍မရပါ။",
+        batch_added_msg: "အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ။ ({count} ရက်)",
+        batch_deleted_msg: "{count} ရက်၏ အစီအစဉ်များကို ဖျက်ပြီးပါပြီ။",
+        alert_select_dates: "စတင်မည့်ရက်နှင့် ပြီးဆုံးမည့်ရက်ကို ရွေးပါ!",
+        alert_date_invalid: "စတင်ရက်သည် ပြီးဆုံးရက်ထက် မကြီးရပါ!",
+        alert_specific_invalid: "ဤလအတွက် မှန်ကန်သော ရက်စွဲများကို ထည့်ပါ!",
+        alert_fill_cat: "အမျိုးအစားအမည်နှင့် အိုင်ကွန်ကို ထည့်သွင်းပါ!",
+        cat_created_msg: "အမျိုးအစား \"{name}\" ကို အောင်မြင်စွာ ဖန်တီးပြီးပါပြီ။",
+        import_success: "ဒေတာများ အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ။",
+        import_error: "ဖိုင်မမှန်ကန်ပါ!",
+        notif_enabled: "သတိပေးချက် ဖွင့်ပြီးပါပြီ။",
+        format_month: (y, m) => {
+          const names = ["ဇန်နဝါရီ", "ဖေဖော်ဝါရီ", "မတ်", "ဧပြီ", "မေ", "ဇွန်", "ဇူလိုင်", "သြဂုတ်", "စက်တင်ဘာ", "အောက်တိုဘာ", "နိုဝင်ဘာ", "ဒီဇင်ဘာ"];
+          return `${y} ခုနှစ်၊ ${names[m]}`;
+        },
+        format_date_label: (y, m, d) => `${y} ခုနှစ်၊ ${m + 1} လ၊ ${d} ရက်`,
+        default_cats: {
+          empty: "အားသည်", school: "ကျောင်း", nursing: "ဘိုးဘွားရိပ်သာ", lawson: "လောဆန်", outing: "အပြင်ထွက်"
+        }
+      }
+    };
+
+    let currentLang = localStorage.getItem("app_lang") || "vi";
+    let currentView = localStorage.getItem("app_view") || "timeline"; // "timeline" hoặc "grid"
+
+    function t(key, params = {}) {
+      const dict = I18N[currentLang] || I18N.vi;
+      let val = dict[key] || I18N.vi[key] || key;
+      if (typeof val === 'string') {
+        for (let p in params) {
+          val = val.replace(`{${p}}`, params[p]);
+        }
+      }
+      return val;
+    }
+
+    /* ========================================================
+       2. TÍNH TOÁN NGÀY LỄ NHẬT BẢN THEO NGÔN NGỮ
+       ======================================================== */
+    const JAPAN_HOLIDAYS_I18N = {
+      new_year: { vi: "Tết Dương lịch (元日)", ja: "元日", en: "New Year's Day", my: "နှစ်သစ်ကူးနေ့" },
+      foundation: { vi: "Quốc khánh (建国記念の日)", ja: "建国記念の日", en: "National Foundation Day", my: "နိုင်ငံတည်ထောင်သည့်နေ့" },
+      emperor: { vi: "Sinh nhật Nhật Hoàng (天皇誕生日)", ja: "天皇誕生日", en: "Emperor's Birthday", my: "ဧကရာဇ်မွေးနေ့" },
+      showa: { vi: "Ngày Chiêu Hòa (昭和の日)", ja: "昭和の日", en: "Showa Day", my: "ရှိုဝါနေ့" },
+      constitution: { vi: "Ngày Hiến pháp (憲法記念日)", ja: "憲法記念日", en: "Constitution Memorial Day", my: "ဖွဲ့စည်းပုံအခြေခံဥပဒေနေ့" },
+      greenery: { vi: "Ngày Cây xanh (みどりの日)", ja: "みどりの日", en: "Greenery Day", my: "သစ်ပင်စိမ်းလန်းစိုပြေရေးနေ့" },
+      children: { vi: "Tết Thiếu nhi (こどもの日)", ja: "こどもの日", en: "Children's Day", my: "ကလေးများနေ့" },
+      mountain: { vi: "Ngày Núi (山の日)", ja: "山の日", en: "Mountain Day", my: "တောင်တန်းနေ့" },
+      culture: { vi: "Ngày Văn hóa (文化の日)", ja: "文化の日", en: "Culture Day", my: "ယဉ်ကျေးမှုနေ့" },
+      labor: { vi: "Ngày Cảm tạ lao động (勤労感謝の日)", ja: "勤労感謝の日", en: "Labor Thanksgiving Day", my: "အလုပ်သမားကျေးဇူးတုံ့ပြန်သောနေ့" },
+      coming_of_age: { vi: "Lễ Thành nhân (成人の日)", ja: "成人の日", en: "Coming of Age Day", my: "အရွယ်ရောက်ခြင်းနေ့" },
+      marine: { vi: "Ngày của Biển (海の日)", ja: "海の日", en: "Marine Day", my: "ပင်လယ်ပြင်နေ့" },
+      respect_aged: { vi: "Ngày Kính lão (敬老の日)", ja: "敬老の日", en: "Respect for the Aged Day", my: "သက်ကြီးရွယ်အိုရိုသေသောနေ့" },
+      sports: { vi: "Ngày Thể thao (スポーツの日)", ja: "スポーツの日", en: "Sports Day", my: "အားကစားနေ့" },
+      vernal_equinox: { vi: "Xuân phân (春分の日)", ja: "春分の日", en: "Vernal Equinox Day", my: "နွေဦးရာသီနေ့" },
+      autumnal_equinox: { vi: "Thu phân (秋分の日)", ja: "秋分の日", en: "Autumnal Equinox Day", my: "ဆောင်းဦးရာသီနေ့" },
+      substitute_prefix: { vi: "Nghỉ bù", ja: "振替休日", en: "Substitute Holiday", my: "အစားထိုးရုံးပိတ်ရက်" }
+    };
+
+    function getJapanHolidayRaw(year, month, day) {
+      const m = month + 1;
+      const d = day;
+      const dObj = new Date(year, month, day);
+      const dayOfWeek = dObj.getDay();
+      const nthMonday = Math.ceil(d / 7);
+
+      if (m === 1 && d === 1) return { key: "new_year" };
+      if (m === 2 && d === 11) return { key: "foundation" };
+      if (m === 2 && d === 23) return { key: "emperor" };
+      if (m === 4 && d === 29) return { key: "showa" };
+      if (m === 5 && d === 3) return { key: "constitution" };
+      if (m === 5 && d === 4) return { key: "greenery" };
+      if (m === 5 && d === 5) return { key: "children" };
+      if (m === 8 && d === 11) return { key: "mountain" };
+      if (m === 11 && d === 3) return { key: "culture" };
+      if (m === 11 && d === 23) return { key: "labor" };
+
+      if (m === 1 && dayOfWeek === 1 && nthMonday === 2) return { key: "coming_of_age" };
+      if (m === 7 && dayOfWeek === 1 && nthMonday === 3) return { key: "marine" };
+      if (m === 9 && dayOfWeek === 1 && nthMonday === 3) return { key: "respect_aged" };
+      if (m === 10 && dayOfWeek === 1 && nthMonday === 2) return { key: "sports" };
+
+      if (m === 3 && d === Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4))) return { key: "vernal_equinox" };
+      if (m === 9 && d === Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4))) return { key: "autumnal_equinox" };
+
+      if (dayOfWeek === 1) {
+        const prevDay = new Date(year, month, day - 1);
+        const prevHoliday = getJapanHolidayRaw(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate());
+        if (prevHoliday && !prevHoliday.isSubstitute) {
+          return { key: prevHoliday.key, isSubstitute: true };
+        }
+      }
+      return null;
+    }
+
+    function getJapanHolidayName(year, month, day) {
+      const raw = getJapanHolidayRaw(year, month, day);
+      if (!raw) return null;
+      const lang = currentLang in JAPAN_HOLIDAYS_I18N.new_year ? currentLang : "vi";
+      const name = JAPAN_HOLIDAYS_I18N[raw.key][lang] || JAPAN_HOLIDAYS_I18N[raw.key].vi;
+      if (raw.isSubstitute) {
+        const subPrefix = JAPAN_HOLIDAYS_I18N.substitute_prefix[lang] || "Nghỉ bù";
+        return `${subPrefix} (${name})`;
+      }
+      return name;
+    }
+
+    /* ========================================================
+       3. FIREBASE & DỮ LIỆU CƠ BẢN
+       ======================================================== */
     const firebaseConfig = {
       apiKey: "AIzaSyD4dt1u-HycuI3o_cJkz7DIIu3O3R0LLa4",
       authDomain: "self-chedule.firebaseapp.com",
@@ -484,12 +1019,12 @@
       console.error("Lỗi Firebase:", e);
     }
 
-    // Các mục mặc định của bạn
-    const defaultStatusMap = {
-      school: { text: "Đi học", icon: "📖", bgClass: "bg-school", hex: "#8b5cf6" },
-      nursing: { text: "Viện dưỡng lão", icon: "👴", bgClass: "bg-nursing", hex: "#10b981" },
-      lawson: { text: "Lawson", icon: "📦", bgClass: "bg-lawson", hex: "#0284c7" },
-      outing: { text: "Đi chơi", icon: "👟", bgClass: "bg-outing", hex: "#f59e0b" }
+    const defaultStatusMeta = {
+      empty: { icon: "⛅️", bgClass: "bg-empty", hex: "#8FABD4" },
+      school: { icon: "📖", bgClass: "bg-school", hex: "#8b5cf6" },
+      nursing: { icon: "👴", bgClass: "bg-nursing", hex: "#10b981" },
+      lawson: { icon: "📦", bgClass: "bg-lawson", hex: "#0284c7" },
+      outing: { icon: "👟", bgClass: "bg-outing", hex: "#f59e0b" }
     };
 
     let customCategories = JSON.parse(localStorage.getItem("custom_categories") || "{}");
@@ -497,16 +1032,25 @@
     let statusMap = {};
 
     function buildStatusMap() {
-      // Nối danh sách mặc định và tùy chọn
-      statusMap = { 
-        empty: { text: "Trống", icon: "⛅️", bgClass: "bg-empty", hex: "#8FABD4" },
-        ...defaultStatusMap
-      };
+      const dict = I18N[currentLang] || I18N.vi;
+      const catNames = dict.default_cats || I18N.vi.default_cats;
+      statusMap = {};
+
+      for (let key in defaultStatusMeta) {
+        statusMap[key] = {
+          text: catNames[key] || key,
+          icon: defaultStatusMeta[key].icon,
+          bgClass: defaultStatusMeta[key].bgClass,
+          hex: defaultStatusMeta[key].hex
+        };
+      }
+
       for (let key in customCategories) {
         statusMap[key] = {
           text: customCategories[key].text,
           icon: customCategories[key].icon,
-          bgClass: `bg-${key}`
+          bgClass: `bg-${key}`,
+          hex: customCategories[key].color
         };
       }
     }
@@ -525,33 +1069,35 @@
       const el = document.getElementById(selectId);
       if (!el) return;
       
-      const currentVal = el.value; // giữ giá trị cũ nếu đang chọn
+      const currentVal = el.value;
       el.innerHTML = "";
 
       if (isFilter) {
-        el.innerHTML += `<option value="all">Tất cả lịch</option>`;
+        el.innerHTML += `<option value="all">${t('all_events')}</option>`;
       }
 
       if (includeNone) {
-        el.innerHTML += `<option value="none">-- Không có --</option>`;
+        el.innerHTML += `<option value="none">${t('opt_none')}</option>`;
       } else if (selectId !== 'filterStatus') {
-        let emptyText = (selectId.startsWith('batch')) ? "⚪ Xóa về Trống" : "⛅️ Trống";
+        let emptyText = (selectId.startsWith('batch')) ? t('opt_clear_to_empty') : t('opt_empty');
         el.innerHTML += `<option value="empty">${emptyText}</option>`;
       } else {
-        el.innerHTML += `<option value="empty">⛅️ Trống</option>`;
+        el.innerHTML += `<option value="empty">${t('opt_empty')}</option>`;
       }
 
-      // Default
-      Object.keys(defaultStatusMap).forEach(key => {
-        el.innerHTML += `<option value="${key}">${defaultStatusMap[key].icon} ${defaultStatusMap[key].text}</option>`;
+      // Default categories
+      ['school', 'nursing', 'lawson', 'outing'].forEach(key => {
+        if (statusMap[key]) {
+          el.innerHTML += `<option value="${key}">${statusMap[key].icon} ${statusMap[key].text}</option>`;
+        }
       });
 
-      // Custom
+      // Custom categories
       Object.keys(customCategories).forEach(key => {
         el.innerHTML += `<option value="${key}">${customCategories[key].icon} ${customCategories[key].text}</option>`;
       });
 
-      if(currentVal) el.value = currentVal;
+      if (currentVal) el.value = currentVal;
     }
 
     function renderAllSelects() {
@@ -563,45 +1109,122 @@
       populateSelect('counterCategory', false, false);
     }
 
-    // Khởi tạo trạng thái danh sách ban đầu
+    function applyTranslationsToUI() {
+      document.getElementById("pageTitle").innerText = t('app_title');
+      document.getElementById("lblMenuTitle").innerText = t('menu_title');
+      document.getElementById("lblLanguage").innerText = t('language_label');
+      document.getElementById("lblMenuQuick").innerText = t('quick_tools');
+      document.getElementById("btnBatchAdd").innerText = t('btn_batch_add');
+      document.getElementById("btnBatchDel").innerText = t('btn_batch_del');
+      document.getElementById("btnAddCounter").innerText = t('btn_add_counter');
+      document.getElementById("btnAddCategory").innerText = t('btn_add_category');
+      document.getElementById("btnExportPdf").innerText = t('btn_export_pdf');
+      document.getElementById("lblMenuFilter").innerText = t('search_filter');
+      document.getElementById("searchInput").placeholder = t('search_placeholder');
+      document.getElementById("lblMenuOther").innerText = t('other_settings');
+      document.getElementById("btnToggleTheme").innerText = t('toggle_theme');
+      document.getElementById("btnRequestNotif").innerText = t('enable_reminders');
+      document.getElementById("btnExportData").innerText = t('export_backup');
+      document.getElementById("btnImportData").innerText = t('import_backup');
+      document.getElementById("viewTimelineBtn").title = t('view_timeline') || "Timeline";
+      document.getElementById("viewGridBtn").title = t('view_grid') || "Grid";
+
+      if (!currentUser) {
+        document.getElementById("lblUserOffline").innerText = t('offline_user');
+        document.getElementById("authBtn").innerText = t('btn_login');
+      } else {
+        document.getElementById("authBtn").innerText = t('btn_logout');
+      }
+
+      // Modals
+      document.getElementById("lblSlot1").innerText = t('slot_1_label');
+      document.getElementById("lblSlot2").innerText = t('slot_2_label');
+      document.getElementById("lblDetailNote").innerText = t('note_label');
+      document.getElementById("editNote").placeholder = t('note_placeholder');
+      document.getElementById("btnModalDelete").innerText = t('btn_delete');
+      document.getElementById("btnModalCancel").innerText = t('btn_cancel');
+      document.getElementById("btnModalSave").innerText = t('btn_save');
+
+      // Batch Add Modal
+      document.getElementById("lblBatchAddTitle").innerText = t('batch_add_title');
+      document.getElementById("lblBatchMode").innerText = t('batch_mode_label');
+      document.getElementById("optBatchRange").innerText = t('batch_mode_range');
+      document.getElementById("optBatchSpecific").innerText = t('batch_mode_specific');
+      document.getElementById("lblBatchFrom").innerText = t('from_date');
+      document.getElementById("lblBatchTo").innerText = t('to_date');
+      document.getElementById("lblBatchWeekdays").innerText = t('apply_weekdays');
+      document.getElementById("lblBatchSpecificInput").innerText = t('specific_days_label');
+      document.getElementById("lblBatchApplyForMonth").innerText = t('apply_for_month');
+      document.getElementById("lblBatchSlot1").innerText = t('slot_1_label');
+      document.getElementById("lblBatchSlot2").innerText = t('slot_2_label');
+      document.getElementById("lblBatchNote").innerText = t('batch_note_placeholder');
+      document.getElementById("batchNote").placeholder = t('batch_note_placeholder');
+      document.getElementById("btnBatchCancel").innerText = t('btn_cancel');
+      document.getElementById("btnBatchApply").innerText = t('btn_apply');
+
+      // Weekday labels in batch modals
+      const wkNames = (I18N[currentLang] || I18N.vi).weekdays;
+      document.getElementById("lblW1").innerText = wkNames[1];
+      document.getElementById("lblW2").innerText = wkNames[2];
+      document.getElementById("lblW3").innerText = wkNames[3];
+      document.getElementById("lblW4").innerText = wkNames[4];
+      document.getElementById("lblW5").innerText = wkNames[5];
+      document.getElementById("lblW6").innerText = wkNames[6];
+      document.getElementById("lblW0").innerText = wkNames[0];
+
+      // Batch Del Modal
+      document.getElementById("lblBatchDelTitle").innerText = t('batch_del_title');
+      document.getElementById("lblDelFrom").innerText = t('from_date');
+      document.getElementById("lblDelTo").innerText = t('to_date');
+      document.getElementById("lblDelWeekdays").innerText = t('batch_del_weekdays');
+      document.getElementById("lblDW1").innerText = wkNames[1];
+      document.getElementById("lblDW2").innerText = wkNames[2];
+      document.getElementById("lblDW3").innerText = wkNames[3];
+      document.getElementById("lblDW4").innerText = wkNames[4];
+      document.getElementById("lblDW5").innerText = wkNames[5];
+      document.getElementById("lblDW6").innerText = wkNames[6];
+      document.getElementById("lblDW0").innerText = wkNames[0];
+      document.getElementById("btnDelCancel").innerText = t('btn_cancel');
+      document.getElementById("btnDelConfirm").innerText = t('btn_confirm_del');
+
+      // Counter Modal
+      document.getElementById("lblCounterModalTitle").innerText = t('counter_title_modal');
+      document.getElementById("lblCounterType").innerText = t('counter_type_label');
+      document.getElementById("optCounterCountdown").innerText = t('counter_mode_countdown');
+      document.getElementById("optCounterMonth").innerText = t('counter_mode_month');
+      document.getElementById("lblCounterCategory").innerText = t('select_category');
+      document.getElementById("btnCounterCancel").innerText = t('btn_cancel');
+      document.getElementById("btnCounterSave").innerText = t('btn_add');
+
+      // Category Modal
+      document.getElementById("lblCatModalTitle").innerText = t('category_modal_title');
+      document.getElementById("lblCatName").innerText = t('category_name_label');
+      document.getElementById("lblCatIcon").innerText = t('category_icon_label');
+      document.getElementById("lblCatColor").innerText = t('category_color_label');
+      document.getElementById("btnCatCancel").innerText = t('btn_cancel');
+      document.getElementById("btnCatSave").innerText = t('btn_create');
+
+      // Dropdown chọn ngôn ngữ
+      document.getElementById("langSelect").value = currentLang;
+    }
+
+    function changeLanguage(lang) {
+      if (!I18N[lang]) return;
+      currentLang = lang;
+      localStorage.setItem("app_lang", lang);
+      document.documentElement.lang = lang;
+      buildStatusMap();
+      renderAllSelects();
+      applyTranslationsToUI();
+      renderCurrentView();
+    }
+
+    // Khởi tạo ban đầu
+    document.documentElement.lang = currentLang;
     buildStatusMap();
     renderDynamicStyles();
     renderAllSelects();
-
-    // Tính ngày nghỉ lễ Nhật Bản
-    function getJapanHolidayName(year, month, day) {
-      const m = month + 1;
-      const d = day;
-      const dObj = new Date(year, month, day);
-      const dayOfWeek = dObj.getDay();
-      const nthMonday = Math.ceil(d / 7);
-
-      if (m === 1 && d === 1) return "Tết Dương lịch (元日)";
-      if (m === 2 && d === 11) return "Quốc khánh (建国記念の日)";
-      if (m === 2 && d === 23) return "Sinh nhật Nhật Hoàng (天皇誕生日)";
-      if (m === 4 && d === 29) return "Ngày Chiêu Hòa (昭和の日)";
-      if (m === 5 && d === 3) return "Ngày Hiến pháp (憲法記念日)";
-      if (m === 5 && d === 4) return "Ngày Cây xanh (みどりの日)";
-      if (m === 5 && d === 5) return "Tết Thiếu nhi (こどもの日)";
-      if (m === 8 && d === 11) return "Ngày Núi (山の日)";
-      if (m === 11 && d === 3) return "Ngày Văn hóa (文化の日)";
-      if (m === 11 && d === 23) return "Ngày Cảm tạ lao động (勤労感謝の日)";
-
-      if (m === 1 && dayOfWeek === 1 && nthMonday === 2) return "Lễ Thành nhân (成人の日)";
-      if (m === 7 && dayOfWeek === 1 && nthMonday === 3) return "Ngày của Biển (海の日)";
-      if (m === 9 && dayOfWeek === 1 && nthMonday === 3) return "Ngày Kính lão (敬老の日)";
-      if (m === 10 && dayOfWeek === 1 && nthMonday === 2) return "Ngày Thể thao (スポーツの日)";
-
-      if (m === 3 && d === Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4))) return "Xuân phân (春分の日)";
-      if (m === 9 && d === Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4))) return "Thu phân (秋分の日)";
-
-      if (dayOfWeek === 1) {
-        const prevDay = new Date(year, month, day - 1);
-        const prevHoliday = getJapanHolidayName(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate());
-        if (prevHoliday && !prevHoliday.includes("Nghỉ bù")) return `Nghỉ bù (${prevHoliday})`;
-      }
-      return null;
-    }
+    applyTranslationsToUI();
 
     let currentDate = new Date();
     let eventsData = JSON.parse(localStorage.getItem("calendar_events") || "{}");
@@ -623,12 +1246,12 @@
             <img src="${user.photoURL || 'https://via.placeholder.com/32'}" class="user-avatar" />
             <span>${escapeHtml(user.displayName || user.email)}</span>
           `;
-          authBtn.innerText = "Đăng xuất";
+          authBtn.innerText = t('btn_logout');
           authBtn.style.background = "#ef4444";
           listenToCloudChanges(user.uid);
         } else {
-          userInfoDiv.innerHTML = `<span>⚪ Dùng Offline (Chưa đăng nhập)</span>`;
-          authBtn.innerText = "Đăng nhập Google";
+          userInfoDiv.innerHTML = `<span id="lblUserOffline">${t('offline_user')}</span>`;
+          authBtn.innerText = t('btn_login');
           authBtn.style.background = "var(--primary)";
           if (unsubscribeSnapshot) unsubscribeSnapshot();
         }
@@ -674,7 +1297,7 @@
           }
 
           localStorage.setItem("calendar_events", JSON.stringify(eventsData));
-          renderTimeline();
+          renderCurrentView();
         } else {
           userDocRef.set({ events: eventsData, categories: customCategories }, { merge: true });
         }
@@ -711,7 +1334,6 @@
       document.body.setAttribute("data-theme", "dark");
     }
 
-    
     function saveCountersToStorage() {
       localStorage.setItem("user_counters", JSON.stringify(userCounters));
       if (currentUser && db) {
@@ -738,7 +1360,7 @@
       renderCounters();
     }
     function deleteCounter(index) {
-      if(confirm("Xóa bộ đếm này?")) {
+      if (confirm(t('confirm_del_counter'))) {
         userCounters.splice(index, 1);
         saveCountersToStorage();
         renderCounters();
@@ -786,10 +1408,10 @@
               break;
             }
           }
-          if (daysLeft === -1) valueText = "Chưa có";
-          else if (daysLeft === 0) valueText = "Hôm nay";
-          else if (daysLeft === 1) valueText = "Ngày mai";
-          else valueText = `Còn ${daysLeft} ngày`;
+          if (daysLeft === -1) valueText = t('no_event_found');
+          else if (daysLeft === 0) valueText = t('today');
+          else if (daysLeft === 1) valueText = t('tomorrow');
+          else valueText = t('days_left', { n: daysLeft });
         } 
         else if (mode === "count_month") {
           let count = 0;
@@ -800,10 +1422,10 @@
             let t2 = rawData.type2 || "none";
             if (t1 === cat || t2 === cat) count++;
           }
-          valueText = `${count} ngày`;
+          valueText = t('days_count', { n: count });
         }
 
-        const titleText = mode === "countdown" ? "⏳ Đếm ngược" : "🗓 Tháng này";
+        const titleText = mode === "countdown" ? t('countdown_title') : t('month_count_title');
         
         const widget = document.createElement("div");
         widget.className = "counter-widget";
@@ -820,28 +1442,59 @@
 
     function changeMonth(offset) {
       currentDate.setMonth(currentDate.getMonth() + offset);
-      renderTimeline();
+      renderCurrentView();
     }
 
     function formatDateKey(year, month, day) {
       return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     }
 
+    /* ========================================================
+       4. CHẾ ĐỘ XEM: TIMELINE & GRID MONTH VIEW
+       ======================================================== */
+    function switchView(mode) {
+      currentView = mode;
+      localStorage.setItem("app_view", mode);
+      renderCurrentView();
+    }
+
+    function renderCurrentView() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const dict = I18N[currentLang] || I18N.vi;
+      document.getElementById("currentMonthLabel").innerText = dict.format_month(year, month);
+
+      if (currentView === "grid") {
+        document.getElementById("timelineContainer").style.display = "none";
+        document.getElementById("gridCalendarContainer").style.display = "block";
+        document.getElementById("viewTimelineBtn").classList.remove("active");
+        document.getElementById("viewGridBtn").classList.add("active");
+        renderGridView();
+      } else {
+        document.getElementById("timelineContainer").style.display = "flex";
+        document.getElementById("gridCalendarContainer").style.display = "none";
+        document.getElementById("viewTimelineBtn").classList.add("active");
+        document.getElementById("viewGridBtn").classList.remove("active");
+        renderTimeline();
+      }
+      renderCounters();
+    }
+
+    /* Hiển thị Dạng Danh sách (Timeline View) */
     function renderTimeline() {
       const container = document.getElementById("timelineContainer");
       container.innerHTML = "";
 
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      document.getElementById("currentMonthLabel").innerText = `Tháng ${String(month + 1).padStart(2, '0')}/${year}`;
-
       const totalDays = new Date(year, month + 1, 0).getDate();
       const searchQuery = document.getElementById("searchInput").value.toLowerCase();
       const filterType = document.getElementById("filterStatus").value;
 
       const now = new Date();
       const todayStr = formatDateKey(now.getFullYear(), now.getMonth(), now.getDate());
-      const weekdays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+      const dict = I18N[currentLang] || I18N.vi;
+      const weekdays = dict.weekdays;
 
       for (let day = 1; day <= totalDays; day++) {
         const dateKey = formatDateKey(year, month, day);
@@ -910,12 +1563,137 @@
         `;
         container.appendChild(card);
       }
-      renderCounters();
     }
 
+    /* Hiển thị Dạng Lưới tháng (Grid Month View) */
+    function renderGridView() {
+      const container = document.getElementById("gridCalendarContainer");
+      container.innerHTML = "";
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
+      const filterType = document.getElementById("filterStatus").value;
+
+      const now = new Date();
+      const todayStr = formatDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+      const dict = I18N[currentLang] || I18N.vi;
+      const weekdays = dict.weekdays; // [0: CN, 1: T2, 2: T3, 3: T4, 4: T5, 5: T6, 6: T7]
+
+      // Thứ tự cột theo tuần làm việc: Thứ 2 -> Chủ Nhật [1, 2, 3, 4, 5, 6, 0]
+      const colOrder = [1, 2, 3, 4, 5, 6, 0];
+
+      // Tiêu đề các thứ trong tuần
+      const headerRow = document.createElement("div");
+      headerRow.className = "grid-weekdays-header";
+      colOrder.forEach(idx => {
+        const titleEl = document.createElement("div");
+        titleEl.className = "grid-weekday-title" + (idx === 6 ? " sat" : idx === 0 ? " sun" : "");
+        titleEl.innerText = weekdays[idx];
+        headerRow.appendChild(titleEl);
+      });
+      container.appendChild(headerRow);
+
+      // Thân lưới ngày
+      const cellsContainer = document.createElement("div");
+      cellsContainer.className = "grid-cells-container";
+
+      // Tính ngày bắt đầu: Thứ của ngày mùng 1
+      const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0-6
+      const startOffset = (firstDayOfWeek + 6) % 7; // Số ô trống cần đệm trước ngày 1
+
+      // Các ngày đệm của tháng trước
+      const prevMonthLastDay = new Date(year, month, 0).getDate();
+      for (let i = 0; i < startOffset; i++) {
+        const prevDayNum = prevMonthLastDay - startOffset + i + 1;
+        const emptyCell = document.createElement("div");
+        emptyCell.className = "grid-day-cell other-month";
+        emptyCell.innerHTML = `<div class="grid-day-header"><span class="grid-day-num">${prevDayNum}</span></div>`;
+        cellsContainer.appendChild(emptyCell);
+      }
+
+      // Các ngày trong tháng hiện tại
+      for (let day = 1; day <= totalDays; day++) {
+        const dateKey = formatDateKey(year, month, day);
+        const rawData = eventsData[dateKey] || { type: "empty", note: "" };
+        const type1 = rawData.type1 || rawData.type || "empty";
+        const type2 = rawData.type2 || "none";
+        const note = rawData.note || "";
+
+        const dayOfWeekIndex = new Date(year, month, day).getDay();
+        const holidayName = getJapanHolidayName(year, month, day);
+
+        const status1 = statusMap[type1] || statusMap.empty;
+        const status2 = (type2 !== "none" && statusMap[type2]) ? statusMap[type2] : null;
+
+        // Kiểm tra bộ lọc
+        let isDimmed = false;
+        if (filterType !== "all") {
+          if (type1 !== filterType && type2 !== filterType) isDimmed = true;
+        }
+        if (searchQuery && !note.toLowerCase().includes(searchQuery)) isDimmed = true;
+
+        const cell = document.createElement("div");
+        let cellClass = "grid-day-cell";
+        if (dateKey === todayStr) cellClass += " today";
+        if (isDimmed) cellClass += " dimmed";
+        cell.className = cellClass;
+        cell.onclick = () => openModal(dateKey, year, month, day);
+
+        let numClass = "grid-day-num";
+        if (holidayName) numClass += " holiday";
+        else if (dayOfWeekIndex === 0) numClass += " sunday";
+        else if (dayOfWeekIndex === 6) numClass += " saturday";
+
+        let eventsHtml = "";
+        if (type1 !== "empty") {
+          eventsHtml += `
+            <div class="grid-badge ${status1.bgClass}">
+              <span>${status1.icon}</span>
+              <span class="badge-text">${status1.text}</span>
+            </div>
+          `;
+        }
+        if (status2) {
+          eventsHtml += `
+            <div class="grid-badge ${status2.bgClass}">
+              <span>${status2.icon}</span>
+              <span class="badge-text">${status2.text}</span>
+            </div>
+          `;
+        }
+
+        cell.innerHTML = `
+          <div class="grid-day-header">
+            <span class="${numClass}">${day}</span>
+            ${holidayName ? `<span class="grid-holiday-tag" title="${escapeHtml(holidayName)}">🎌 ${escapeHtml(holidayName)}</span>` : ""}
+          </div>
+          <div class="grid-events">
+            ${eventsHtml}
+            ${note ? `<div class="grid-note-preview">📝 ${escapeHtml(note)}</div>` : ""}
+          </div>
+        `;
+        cellsContainer.appendChild(cell);
+      }
+
+      // Đệm các ô sau tháng này để đủ hàng hoàn chỉnh
+      const remainingCells = (7 - ((startOffset + totalDays) % 7)) % 7;
+      for (let i = 1; i <= remainingCells; i++) {
+        const nextCell = document.createElement("div");
+        nextCell.className = "grid-day-cell other-month";
+        nextCell.innerHTML = `<div class="grid-day-header"><span class="grid-day-num">${i}</span></div>`;
+        cellsContainer.appendChild(nextCell);
+      }
+
+      container.appendChild(cellsContainer);
+    }
+
+    /* Modal Chi tiết ngày */
     function openModal(dateKey, y, m, d) {
       selectedDateKey = dateKey;
-      document.getElementById("modalDateLabel").innerText = `Ngày ${d}/${m + 1}/${y}`;
+      const dict = I18N[currentLang] || I18N.vi;
+      document.getElementById("modalDateLabel").innerText = dict.format_date_label(y, m, d);
       const rawData = eventsData[dateKey] || { type: "empty", note: "" };
       
       document.getElementById("editType1").value = rawData.type1 || rawData.type || "empty";
@@ -942,16 +1720,16 @@
 
       saveToStorage();
       closeModal();
-      renderTimeline();
+      renderCurrentView();
     }
 
     function deleteDayData() {
       if (!selectedDateKey) return;
-      if (confirm("Bạn có chắc chắn muốn xóa trống lịch của ngày này không?")) {
+      if (confirm(t('confirm_del_day'))) {
         eventsData[selectedDateKey] = { type1: "empty", type2: "none", note: "" };
         saveToStorage();
         closeModal();
-        renderTimeline();
+        renderCurrentView();
       }
     }
 
@@ -969,7 +1747,7 @@
       const color = document.getElementById("newCatColor").value;
 
       if (!name || !icon) {
-        alert("Vui lòng nhập đủ tên mục và Emoji!");
+        alert(t('alert_fill_cat'));
         return;
       }
 
@@ -980,15 +1758,15 @@
       buildStatusMap();
       renderDynamicStyles();
       renderAllSelects();
-      renderTimeline();
+      renderCurrentView();
       
       document.getElementById("newCatName").value = "";
       document.getElementById("newCatIcon").value = "";
       closeAddCategoryModal();
-      alert(`Đã thêm mục "${name}" thành công!`);
+      alert(t('cat_created_msg', { name: name }));
     }
 
-    /* Hàm để chuyển đổi chế độ Thêm Hàng Loạt */
+    /* Modal Thêm Hàng Loạt */
     function toggleBatchMode() {
       const mode = document.getElementById("batchMode").value;
       if (mode === "range") {
@@ -1000,7 +1778,6 @@
       }
     }
 
-    /* Modal Thêm Hàng Loạt */
     function openBatchModal() {
       toggleMenu();
       const year = currentDate.getFullYear();
@@ -1023,17 +1800,17 @@
       const type1 = document.getElementById("batchType1").value;
       const type2 = document.getElementById("batchType2").value;
       const note = document.getElementById("batchNote").value.trim();
-      const skipHolidays = true; // Luôn luôn tự động bỏ qua ngày lễ
+      const skipHolidays = true; // Luôn tự động bỏ qua ngày lễ Nhật Bản
 
       let count = 0;
 
       if (mode === "range") {
         const startVal = document.getElementById("batchStartDate").value;
         const endVal = document.getElementById("batchEndDate").value;
-        if (!startVal || !endVal) { alert("Vui lòng chọn ngày bắt đầu và ngày kết thúc!"); return; }
+        if (!startVal || !endVal) { alert(t('alert_select_dates')); return; }
         const startDate = new Date(startVal);
         const endDate = new Date(endVal);
-        if (startDate > endDate) { alert("Ngày bắt đầu không được lớn hơn ngày kết thúc!"); return; }
+        if (startDate > endDate) { alert(t('alert_date_invalid')); return; }
 
         const selectedWeekdays = [];
         for (let i = 0; i <= 6; i++) {
@@ -1067,14 +1844,14 @@
       } else {
         // Specific dates
         const datesStr = document.getElementById("batchSpecificDates").value;
-        if (!datesStr) { alert("Vui lòng nhập các ngày cụ thể!"); return; }
+        if (!datesStr) { alert(t('alert_specific_invalid')); return; }
         
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
         
         const daysArr = datesStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 1 && n <= totalDaysInMonth);
-        if (daysArr.length === 0) { alert("Không có ngày nào hợp lệ trong tháng này!"); return; }
+        if (daysArr.length === 0) { alert(t('alert_specific_invalid')); return; }
 
         for (let d of daysArr) {
           const holidayName = getJapanHolidayName(year, month, d);
@@ -1095,8 +1872,8 @@
 
       saveToStorage();
       closeBatchModal();
-      renderTimeline();
-      alert(`Đã cập nhật xong! (${count} ngày đã được đặt lịch).`);
+      renderCurrentView();
+      alert(t('batch_added_msg', { count: count }));
     }
 
     /* Modal Xóa Hàng Loạt */
@@ -1121,7 +1898,7 @@
       const endVal = document.getElementById("batchDelEndDate").value;
 
       if (!startVal || !endVal) {
-        alert("Vui lòng chọn ngày bắt đầu và kết thúc!");
+        alert(t('alert_select_dates'));
         return;
       }
 
@@ -1129,11 +1906,11 @@
       const endDate = new Date(endVal);
 
       if (startDate > endDate) {
-        alert("Ngày bắt đầu không được lớn hơn ngày kết thúc!");
+        alert(t('alert_date_invalid'));
         return;
       }
 
-      if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa trống toàn bộ lịch trong khoảng thời gian và các thứ đã chọn không? Hành động này không thể hoàn tác!")) {
+      if (!confirm(t('confirm_batch_del'))) {
         return;
       }
 
@@ -1165,8 +1942,8 @@
 
       saveToStorage();
       closeBatchDeleteModal();
-      renderTimeline();
-      alert(`Đã dọn dẹp sạch sẽ lịch của ${count} ngày!`);
+      renderCurrentView();
+      alert(t('batch_deleted_msg', { count: count }));
     }
 
     function escapeHtml(text) {
@@ -1194,10 +1971,10 @@
         try {
           eventsData = JSON.parse(e.target.result);
           saveToStorage();
-          renderTimeline();
-          alert("Nhập dữ liệu thành công!");
+          renderCurrentView();
+          alert(t('import_success'));
         } catch (err) {
-          alert("File không hợp lệ!");
+          alert(t('import_error'));
         }
       };
       reader.readAsText(file);
@@ -1205,23 +1982,22 @@
 
     /* Xuất file PDF */
     function exportPDF() {
-      toggleMenu(); // Đóng menu
-      // Thêm một chút delay để UI menu ẩn hẳn rồi mới chụp PDF
+      toggleMenu();
       setTimeout(() => {
         const element = document.getElementById('pdfWrapper');
-        const monthLabel = document.getElementById('currentMonthLabel').innerText.replace('/', '-');
+        const monthLabel = document.getElementById('currentMonthLabel').innerText.replace(/[/ ]/g, '-');
         
+        const isGrid = (currentView === "grid");
         const opt = {
-          margin:       [10, 5, 10, 5],
+          margin:       [8, 5, 8, 5],
           filename:     `Lich_${monthLabel}.pdf`,
           image:        { type: 'jpeg', quality: 0.98 },
           html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak:    { mode: 'css', before: '#page2el' }
+          jsPDF:        { unit: 'mm', format: 'a4', orientation: isGrid ? 'landscape' : 'portrait' },
+          pagebreak:    { mode: 'css' }
         };
 
         html2pdf().set(opt).from(element).save().then(() => {
-          // Thông báo khi tải xong
           console.log("Xuất PDF thành công!");
         });
       }, 300);
@@ -1231,13 +2007,14 @@
       if ("Notification" in window) {
         Notification.requestPermission().then(permission => {
           if (permission === "granted") {
-            new Notification("Lịch Cá Nhân", { body: "Đã bật thông báo nhắc hẹn thành công!" });
+            new Notification(t('app_title'), { body: t('notif_enabled') });
           }
         });
       }
     }
 
-    renderTimeline();
+    // Hiển thị ban đầu
+    renderCurrentView();
   </script>
 </body>
 </html>
