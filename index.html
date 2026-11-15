@@ -110,49 +110,721 @@
       background: var(--bg); color: var(--text); font-size: 0.9rem;
     }
 
+    /* Nút Về Hôm Nay trong Header */
+    .btn-today {
+      background: var(--highlight);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-left: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-today:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+
     /* Timeline dạng cột */
-    .timeline { max-width: 600px; margin: 16px auto; padding: 0 12px; display: flex; flex-direction: column; gap: 10px; }
+    .timeline {
+      max-width: 640px;
+      margin: 14px auto;
+      padding: 0 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
     
     .day-card {
-      background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
-      display: flex; align-items: stretch; cursor: pointer; position: relative;
-      transition: transform 0.1s, box-shadow 0.2s; overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05); min-height: 56px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      align-items: stretch;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      min-height: 72px;
       page-break-inside: avoid;
       break-inside: avoid;
     }
-    .day-card:active { transform: scale(0.98); }
-    .day-card.today { border: 2px solid var(--primary); }
+    .day-card:hover {
+      box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+      border-color: #cbd5e1;
+    }
+    .day-card:active {
+      transform: scale(0.99);
+    }
+    .day-card.today {
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 0 1px var(--primary), 0 3px 12px rgba(59, 130, 246, 0.18);
+    }
 
-    /* Khối Màu Bên Trái (Timeline) */
-    .left-badge {
-      display: flex; align-items: stretch; color: #fff; background: var(--tag-empty);
-      min-width: 170px; max-width: 190px; flex-shrink: 0;
+    /* Khối Ngày Bên Trái */
+    .day-date-col {
+      width: 86px;
+      flex-shrink: 0;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 6px;
+      text-align: center;
+      position: relative;
     }
-    .date-section {
-      width: 55px; text-align: center; display: flex; flex-direction: column;
-      justify-content: center; align-items: center; flex-shrink: 0; padding: 6px 0;
+    .day-weekday {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--subtext);
+      line-height: 1.2;
+      margin-bottom: 2px;
+      text-transform: capitalize;
     }
-    .date-num { font-size: 1.35rem; font-weight: bold; line-height: 1.1; font-family: "Times New Roman", Georgia, serif; }
-    .date-weekday { font-size: 0.85rem; font-weight: 600; }
+    .day-weekday.sunday { color: var(--holiday-color); }
+    .day-weekday.saturday { color: #0284c7; }
 
-    .divider-line { width: 1px; background: rgba(255,255,255,0.4); align-self: stretch; }
+    .day-num-month {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.2;
+      letter-spacing: -0.2px;
+    }
+    .day-num-month.holiday, .day-num-month.sunday { color: var(--holiday-color); }
+    .day-num-month.saturday { color: #0284c7; }
 
-    .info-section {
-      flex: 1; display: flex; flex-direction: column; justify-content: center;
+    .day-holiday-pill {
+      margin-top: 4px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--holiday-color);
+      background: rgba(225, 29, 72, 0.08);
+      border: 1px solid rgba(225, 29, 72, 0.2);
+      border-radius: 4px;
+      padding: 1px 4px;
+      max-width: 76px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    .info-single {
-      padding: 6px 8px; display: flex; flex-direction: column; justify-content: center; gap: 2px;
+    .today-badge-pill {
+      margin-top: 4px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--primary);
+      border-radius: 4px;
+      padding: 1px 6px;
+      letter-spacing: 0.2px;
     }
-    .info-item {
-      padding: 4px 8px; display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600;
+
+    /* Khối Nội Dung Bên Phải (Chia trên Sáng/Chiều, dưới Ghi chú) */
+    .day-content-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Hàng Trên: Sáng & Chiều */
+    .day-slots-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+      min-height: 44px;
+    }
+    .day-slot {
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3px;
+      min-width: 0;
+    }
+    .day-slot.morning {
+      border-right: 1px solid var(--border);
+    }
+    .slot-label-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--subtext);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      line-height: 1;
+    }
+    .slot-badge-wrap {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+    .slot-badge-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      line-height: 1.2;
+      color: #fff;
+      max-width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .slot-cat-name {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .slot-badge-chip.is-empty {
+      background: var(--bg);
+      color: var(--subtext);
+      border: 1px dashed var(--border);
+      font-weight: 500;
+    }
+    .slot-badge-chip.is-none {
+      background: transparent;
+      color: var(--subtext);
+      opacity: 0.65;
+      font-weight: 400;
+      padding-left: 2px;
+    }
+
+    /* Hàng Dưới: Ghi chú */
+    .day-notes-row {
+      padding: 7px 10px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      font-size: 0.84rem;
+      color: var(--text);
+      line-height: 1.35;
+      min-height: 30px;
+      background: var(--card-bg);
+      flex: 1;
+    }
+    .notes-prefix {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--subtext);
+      flex-shrink: 0;
+    }
+    .notes-body {
+      flex: 1;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .notes-empty {
+      color: var(--subtext);
+      opacity: 0.55;
+      font-style: italic;
+    }
+
+    /* Hiệu ứng nhấp nháy làm nổi bật ngày hôm nay khi cuộn đến */
+    @keyframes todayPulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7), 0 3px 12px rgba(59, 130, 246, 0.2);
+        transform: scale(1.01);
+      }
+      50% {
+        box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.25), 0 3px 12px rgba(59, 130, 246, 0.2);
+        transform: scale(1.01);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0), 0 1px 3px rgba(0,0,0,0.04);
+        transform: scale(1);
+      }
+    }
+    .today-highlight-flash {
+      animation: todayPulse 1.4s ease-out 1;
+    }
+
+    /* Tóm Tắt Lịch Trình (Schedule Summary) */
+    .summary-container {
+      max-width: 640px;
+      margin: 12px auto 4px auto;
+      padding: 0 12px;
+    }
+    .summary-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    .summary-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .summary-title-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+    .summary-icon { font-size: 1.1rem; }
+    .summary-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .summary-tabs {
+      display: flex;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .summary-tab-btn {
+      background: none;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--subtext);
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .summary-tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .summary-collapse-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--subtext);
+      border-radius: 6px;
+      cursor: pointer;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .summary-collapse-btn:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+    .summary-card.collapsed .summary-body { display: none; }
+    .summary-card.collapsed .summary-header { border-bottom: none; }
+    .summary-body { padding: 14px; }
+
+    /* Summary Tab: Day */
+    .summary-day-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .summary-date-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .summary-day-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .summary-holiday-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--holiday-color);
+      background: rgba(225, 29, 72, 0.08);
+      border: 1px solid rgba(225, 29, 72, 0.2);
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+    .summary-today-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--primary);
+      border-radius: 4px;
+      padding: 2px 8px;
+    }
+    .summary-day-slots {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .summary-slot-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .summary-slot-header {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--subtext);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .summary-slot-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: #fff;
+      max-width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .summary-slot-chip.is-empty {
+      background: var(--card-bg);
+      color: var(--subtext);
+      border: 1px dashed var(--border);
+      font-weight: 500;
+    }
+    .summary-slot-chip.is-none {
+      background: transparent;
+      color: var(--subtext);
+      font-weight: 400;
+      opacity: 0.7;
+    }
+    .summary-note-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.86rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      line-height: 1.4;
+    }
+    .summary-note-label {
+      font-weight: 700;
+      color: var(--subtext);
+      flex-shrink: 0;
+      font-size: 0.78rem;
+    }
+    .summary-note-text {
+      flex: 1;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .summary-note-empty {
+      color: var(--subtext);
+      font-style: italic;
+      opacity: 0.7;
+    }
+    .summary-actions-bar {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .summary-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .summary-btn.primary {
+      background: var(--primary);
       color: #fff;
     }
-    .info-item:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.25); }
+    .summary-btn.secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .summary-btn:hover {
+      opacity: 0.9;
+    }
 
-    .info-icon { font-size: 0.9rem; line-height: 1; }
-    .info-title { font-size: 0.82rem; font-weight: 600; line-height: 1.2; }
-    .holiday-subtext { font-size: 0.7rem; font-weight: bold; color: #ffe4e6; line-height: 1.1; }
+    /* Summary Tab: Week */
+    .summary-week-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .summary-week-title {
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .summary-week-stats {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .stat-pill-highlight {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--highlight);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .stat-pill-sub {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--subtext);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .summary-pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .summary-pill-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .summary-week-strip {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .summary-week-day {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 3px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .summary-week-day:hover {
+      background: var(--card-bg);
+      border-color: var(--primary);
+    }
+    .summary-week-day.is-today {
+      border: 2px solid var(--primary);
+      background: var(--card-bg);
+    }
+    .swd-weekday {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--subtext);
+    }
+    .swd-weekday.sunday { color: var(--holiday-color); }
+    .swd-weekday.saturday { color: #0284c7; }
+    .swd-date {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .swd-slots {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      width: 100%;
+      margin-top: 2px;
+    }
+    .swd-slot-pill {
+      font-size: 0.65rem;
+      padding: 1px 2px;
+      border-radius: 3px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.1;
+      overflow: hidden;
+    }
+    .swd-slot-pill.is-empty {
+      background: transparent;
+      color: var(--subtext);
+      opacity: 0.5;
+    }
+    .swd-slot-pill.is-none {
+      background: transparent;
+      color: var(--subtext);
+      opacity: 0.3;
+    }
+    .swd-note-icon {
+      font-size: 0.65rem;
+      line-height: 1;
+    }
+    .swd-today-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--primary);
+      margin-top: 1px;
+    }
+
+    /* Summary Tab: Month */
+    .summary-month-header {
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+    .summary-month-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .month-stat-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .mstat-val {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+    }
+    .mstat-label {
+      font-size: 0.72rem;
+      color: var(--subtext);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .summary-section-sub {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--subtext);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin: 10px 0 6px 0;
+    }
+    .month-dist-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .month-dist-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+    }
+    .month-dist-label {
+      width: 100px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 600;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      flex-shrink: 0;
+    }
+    .month-dist-bar-wrap {
+      flex: 1;
+      height: 7px;
+      background: var(--bg);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .month-dist-bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+    .month-dist-count {
+      width: 60px;
+      text-align: right;
+      font-size: 0.78rem;
+      color: var(--subtext);
+      flex-shrink: 0;
+    }
+    .month-notes-box {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .month-note-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+    .month-note-item:hover {
+      background: var(--card-bg);
+      border-color: var(--primary);
+    }
+    .month-note-date {
+      font-weight: 700;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .month-note-content {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+    .month-note-more {
+      font-size: 0.75rem;
+      color: var(--subtext);
+      font-style: italic;
+      padding: 2px 4px;
+    }
 
     .bg-school { background: var(--tag-school); }
     .bg-nursing { background: var(--tag-nursing); }
@@ -160,13 +832,6 @@
     .bg-outing { background: var(--tag-outing); }
     .bg-empty { background: var(--tag-empty); }
     .bg-holiday { background: var(--holiday-color); }
-
-    /* Khối Ghi chú Bên Phải (Timeline) */
-    .note-section {
-      flex: 1; padding: 10px 14px; display: flex; align-items: center;
-      font-size: 0.9rem; color: var(--text); white-space: pre-wrap; word-break: break-word; line-height: 1.35;
-    }
-    .note-placeholder { color: var(--subtext); font-style: italic; font-size: 0.85rem; opacity: 0.7; }
 
     /* Chế độ xem Lưới tháng (Grid Month View) */
     .grid-calendar {
@@ -300,6 +965,7 @@
       <button class="btn-icon" onclick="changeMonth(-1)">◀</button>
       <span id="currentMonthLabel">--/----</span>
       <button class="btn-icon" onclick="changeMonth(1)">▶</button>
+      <button class="btn-today" id="btnToday" onclick="goToToday()" title="Đến ngày hôm nay">Hôm nay</button>
     </div>
     <div class="header-actions">
       <!-- Switch Chế độ xem: Danh sách vs Lưới tháng -->
@@ -315,6 +981,29 @@
   <div id="pdfWrapper" style="background: var(--bg); min-height: 100vh;">
     <!-- Container Bộ Đếm -->
     <div id="countersContainer" class="counters-container" style="display: none;"></div>
+
+    <!-- Bảng Tóm Tắt Lịch Trình (Schedule Summary) -->
+    <div id="scheduleSummaryContainer" class="summary-container" data-html2canvas-ignore="true">
+      <div class="summary-card" id="scheduleSummaryCard">
+        <div class="summary-header">
+          <div class="summary-title-group">
+            <span class="summary-icon">✨</span>
+            <span class="summary-title" id="lblSummaryTitle">Tóm tắt lịch trình</span>
+          </div>
+          <div class="summary-controls">
+            <div class="summary-tabs">
+              <button class="summary-tab-btn active" id="tabDayBtn" onclick="ScheduleSummary.switchTab('day')">Hôm nay</button>
+              <button class="summary-tab-btn" id="tabWeekBtn" onclick="ScheduleSummary.switchTab('week')">Tuần này</button>
+              <button class="summary-tab-btn" id="tabMonthBtn" onclick="ScheduleSummary.switchTab('month')">Tháng này</button>
+            </div>
+            <button class="summary-collapse-btn" id="btnToggleSummary" onclick="ScheduleSummary.toggleCollapse()" title="Thu gọn / Mở rộng">
+              <span id="summaryCollapseIcon">▲</span>
+            </button>
+          </div>
+        </div>
+        <div class="summary-body" id="summaryBody"></div>
+      </div>
+    </div>
 
     <!-- Dạng Danh sách cuộn dọc -->
     <main class="timeline" id="timelineContainer"></main>
@@ -582,9 +1271,25 @@
         export_backup: "📤 Xuất File Dự Phòng (.json)",
         import_backup: "📥 Nhập File Dự Phòng (.json)",
         modal_date_detail: "Chi tiết ngày",
-        slot_1_label: "Mục 1 (Sáng / Chính)",
-        slot_2_label: "Mục 2 (Tối / Phụ)",
-        note_label: "Ghi chú chi tiết",
+        slot_1_label: "Buổi sáng (Mục 1)",
+        slot_2_label: "Buổi chiều (Mục 2)",
+        slot_morning: "Sáng",
+        slot_afternoon: "Chiều",
+        opt_none_short: "Không có",
+        btn_today: "Hôm nay",
+        summary_title: "Tóm tắt lịch trình",
+        tab_day: "Hôm nay",
+        tab_week: "Tuần này",
+        tab_month: "Tháng này",
+        summary_no_notes: "Không có ghi chú nào",
+        summary_empty_day: "Không có lịch trình bận",
+        btn_edit_today: "✏️ Sửa lịch hôm nay",
+        btn_scroll_today: "📍 Cuộn đến hôm nay",
+        summary_total_active: "buổi có lịch",
+        summary_total_free: "ngày trống",
+        summary_holidays: "ngày lễ",
+        weekdays_full: ["Chủ Nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"],
+        note_label: "Ghi chú",
         note_placeholder: "Nhập ghi chú chi tiết...",
         btn_delete: "🗑 Xóa",
         btn_cancel: "Hủy",
@@ -667,9 +1372,25 @@
         export_backup: "📤 バックアップを出力 (.json)",
         import_backup: "📥 バックアップを復元 (.json)",
         modal_date_detail: "日付の詳細",
-        slot_1_label: "項目1（午前 / メイン）",
-        slot_2_label: "項目2（夜 / サブ）",
-        note_label: "詳細メモ",
+        slot_1_label: "午前（スロット1）",
+        slot_2_label: "午後（スロット2）",
+        slot_morning: "午前",
+        slot_afternoon: "午後",
+        opt_none_short: "なし",
+        btn_today: "今日",
+        summary_title: "スケジュール概要",
+        tab_day: "今日",
+        tab_week: "今週",
+        tab_month: "今月",
+        summary_no_notes: "メモはありません",
+        summary_empty_day: "予定はありません",
+        btn_edit_today: "✏️ 今日の予定を編集",
+        btn_scroll_today: "📍 今日へ移動",
+        summary_total_active: "件の予定",
+        summary_total_free: "日空き",
+        summary_holidays: "祝日",
+        weekdays_full: ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"],
+        note_label: "メモ",
         note_placeholder: "メモを入力...",
         btn_delete: "🗑 削除",
         btn_cancel: "キャンセル",
@@ -752,8 +1473,24 @@
         export_backup: "📤 Export Backup (.json)",
         import_backup: "📥 Import Backup (.json)",
         modal_date_detail: "Day Details",
-        slot_1_label: "Slot 1 (Morning / Main)",
-        slot_2_label: "Slot 2 (Evening / Sub)",
+        slot_1_label: "Morning (Slot 1)",
+        slot_2_label: "Afternoon (Slot 2)",
+        slot_morning: "Morning",
+        slot_afternoon: "Afternoon",
+        opt_none_short: "None",
+        btn_today: "Today",
+        summary_title: "Schedule Summary",
+        tab_day: "Today",
+        tab_week: "This Week",
+        tab_month: "This Month",
+        summary_no_notes: "No notes",
+        summary_empty_day: "No scheduled events",
+        btn_edit_today: "✏️ Edit Today",
+        btn_scroll_today: "📍 Scroll to Today",
+        summary_total_active: "events",
+        summary_total_free: "free days",
+        summary_holidays: "holidays",
+        weekdays_full: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
         note_label: "Notes",
         note_placeholder: "Enter notes...",
         btn_delete: "🗑 Delete",
@@ -840,9 +1577,25 @@
         export_backup: "📤 အရန်သိမ်းဆည်းမှု ထုတ်ရန် (.json)",
         import_backup: "📥 အရန်သိမ်းဆည်းမှု ထည့်ရန် (.json)",
         modal_date_detail: "နေ့စွဲအသေးစိတ်",
-        slot_1_label: "အပိုင်း ၁ (နံနက် / အဓိက)",
-        slot_2_label: "အပိုင်း ၂ (ညနေ / အရန်)",
-        note_label: "အသေးစိတ်မှတ်စု",
+        slot_1_label: "မနက်ပိုင်း (အကွက် ၁)",
+        slot_2_label: "ညနေပိုင်း (အကွက် ၂)",
+        slot_morning: "မနက်",
+        slot_afternoon: "ညနေ",
+        opt_none_short: "မရှိပါ",
+        btn_today: "ယနေ့",
+        summary_title: "အစီအစဉ် အကျဉ်းချုပ်",
+        tab_day: "ယနေ့",
+        tab_week: "ဒီတစ်ပတ်",
+        tab_month: "ဒီလ",
+        summary_no_notes: "မှတ်စုမရှိပါ",
+        summary_empty_day: "အစီအစဉ် မရှိပါ",
+        btn_edit_today: "✏️ ပြင်ဆင်ရန်",
+        btn_scroll_today: "📍 ယနေ့သို့ သွားပါ",
+        summary_total_active: "အစီအစဉ်",
+        summary_total_free: "နားရက်",
+        summary_holidays: "ရုံးပိတ်ရက်",
+        weekdays_full: ["တနင်္ဂနွေ", "တနင်္လာ", "အင်္ဂါ", "ဗုဒ္ဓဟူး", "ကြာသပတေး", "သောကြာ", "စနေ"],
+        note_label: "မှတ်စု",
         note_placeholder: "မှတ်စုရေးပါ...",
         btn_delete: "🗑 ဖျက်မည်",
         btn_cancel: "ပယ်ဖျက်",
@@ -1128,6 +1881,19 @@
       document.getElementById("btnImportData").innerText = t('import_backup');
       document.getElementById("viewTimelineBtn").title = t('view_timeline') || "Timeline";
       document.getElementById("viewGridBtn").title = t('view_grid') || "Grid";
+
+      const btnTodayEl = document.getElementById("btnToday");
+      if (btnTodayEl) btnTodayEl.innerText = t('btn_today');
+
+      const lblSumTitleEl = document.getElementById("lblSummaryTitle");
+      if (lblSumTitleEl) lblSumTitleEl.innerText = t('summary_title');
+
+      const tabDayBtnEl = document.getElementById("tabDayBtn");
+      if (tabDayBtnEl) tabDayBtnEl.innerText = t('tab_day');
+      const tabWeekBtnEl = document.getElementById("tabWeekBtn");
+      if (tabWeekBtnEl) tabWeekBtnEl.innerText = t('tab_week');
+      const tabMonthBtnEl = document.getElementById("tabMonthBtn");
+      if (tabMonthBtnEl) tabMonthBtnEl.innerText = t('tab_month');
 
       if (!currentUser) {
         document.getElementById("lblUserOffline").innerText = t('offline_user');
@@ -1450,12 +2216,473 @@
     }
 
     /* ========================================================
-       4. CHẾ ĐỘ XEM: TIMELINE & GRID MONTH VIEW
+       TÍNH NĂNG 1: TỰ ĐỘNG CUỘN ĐẾN HÔM NAY & ĐIỀU HƯỚNG NGÀY
+       ======================================================== */
+    function scrollToToday(smooth = true) {
+      const now = new Date();
+      if (currentDate.getFullYear() !== now.getFullYear() || currentDate.getMonth() !== now.getMonth()) {
+        return;
+      }
+      const todayKey = formatDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+      let targetEl = null;
+      if (currentView === "grid") {
+        targetEl = document.querySelector(".grid-day-cell.today");
+      } else {
+        targetEl = document.getElementById(`day-card-${todayKey}`) || document.querySelector(".day-card.today");
+      }
+
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "center" });
+        targetEl.classList.remove("today-highlight-flash");
+        void targetEl.offsetWidth;
+        targetEl.classList.add("today-highlight-flash");
+        setTimeout(() => {
+          targetEl.classList.remove("today-highlight-flash");
+        }, 1800);
+      }
+    }
+
+    function goToToday() {
+      const now = new Date();
+      const needChangeMonth = (currentDate.getFullYear() !== now.getFullYear() || currentDate.getMonth() !== now.getMonth());
+      currentDate = new Date();
+      if (needChangeMonth) {
+        renderCurrentView();
+      }
+      setTimeout(() => {
+        scrollToToday(true);
+      }, needChangeMonth ? 180 : 50);
+    }
+
+    function goToDay(dateKey, y, m, d) {
+      const needRender = (currentDate.getFullYear() !== y || currentDate.getMonth() !== m);
+      if (needRender) {
+        currentDate = new Date(y, m, 1);
+        renderCurrentView();
+      }
+      setTimeout(() => {
+        let target = null;
+        if (currentView === "grid") {
+          const cells = document.querySelectorAll(".grid-day-cell:not(.other-month)");
+          if (cells[d - 1]) target = cells[d - 1];
+        } else {
+          target = document.getElementById(`day-card-${dateKey}`);
+        }
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+          target.classList.remove("today-highlight-flash");
+          void target.offsetWidth;
+          target.classList.add("today-highlight-flash");
+          setTimeout(() => target.classList.remove("today-highlight-flash"), 1800);
+        }
+      }, needRender ? 180 : 50);
+    }
+
+    /* ========================================================
+       TÍNH NĂNG 2: TÓM TẮT LỊCH TRÌNH (NGÀY, TUẦN, THÁNG)
+       ======================================================== */
+    const ScheduleSummary = {
+      currentTab: localStorage.getItem("summary_tab") || "day",
+      isCollapsed: localStorage.getItem("summary_collapsed") === "true",
+
+      init() {
+        this.updateCollapseUI();
+      },
+
+      switchTab(tab) {
+        this.currentTab = tab;
+        localStorage.setItem("summary_tab", tab);
+        if (this.isCollapsed) {
+          this.isCollapsed = false;
+          localStorage.setItem("summary_collapsed", "false");
+          this.updateCollapseUI();
+        }
+        this.render();
+      },
+
+      toggleCollapse() {
+        this.isCollapsed = !this.isCollapsed;
+        localStorage.setItem("summary_collapsed", String(this.isCollapsed));
+        this.updateCollapseUI();
+      },
+
+      updateCollapseUI() {
+        const card = document.getElementById("scheduleSummaryCard");
+        const icon = document.getElementById("summaryCollapseIcon");
+        if (!card || !icon) return;
+        if (this.isCollapsed) {
+          card.classList.add("collapsed");
+          icon.innerText = "▼";
+        } else {
+          card.classList.remove("collapsed");
+          icon.innerText = "▲";
+        }
+      },
+
+      render() {
+        const container = document.getElementById("summaryBody");
+        if (!container) return;
+
+        ["day", "week", "month"].forEach(t => {
+          const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
+          if (btn) {
+            if (t === this.currentTab) btn.classList.add("active");
+            else btn.classList.remove("active");
+          }
+        });
+
+        if (this.currentTab === "day") {
+          this.renderDay(container);
+        } else if (this.currentTab === "week") {
+          this.renderWeek(container);
+        } else if (this.currentTab === "month") {
+          this.renderMonth(container);
+        }
+      },
+
+      /* 1. Tóm tắt Hôm nay */
+      renderDay(container) {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = now.getMonth();
+        const d = now.getDate();
+        const todayKey = formatDateKey(y, m, d);
+        const rawData = eventsData[todayKey] || { type: "empty", note: "" };
+        const type1 = rawData.type1 || rawData.type || "empty";
+        const type2 = rawData.type2 || "none";
+        const note = (rawData.note || "").trim();
+
+        const dict = I18N[currentLang] || I18N.vi;
+        const dayOfWeekIndex = now.getDay();
+        const dayOfWeek = (dict.weekdays_full && dict.weekdays_full[dayOfWeekIndex]) || dict.weekdays[dayOfWeekIndex];
+        const holidayName = getJapanHolidayName(y, m, d);
+
+        const status1 = statusMap[type1] || statusMap.empty;
+        const status2 = (type2 !== "none" && statusMap[type2]) ? statusMap[type2] : null;
+
+        const formattedDate = dict.format_date_label ? dict.format_date_label(y, m, d) : `Ngày ${d}/${m + 1}/${y}`;
+        const isMorningBusy = (type1 !== "empty");
+
+        const morningBadge = `
+          <div class="summary-slot-chip ${isMorningBusy ? status1.bgClass : 'is-empty'}">
+            <span class="slot-cat-icon">${status1.icon}</span>
+            <span class="slot-cat-name">${status1.text}</span>
+          </div>
+        `;
+
+        const afternoonBadge = status2 ? `
+          <div class="summary-slot-chip ${status2.bgClass}">
+            <span class="slot-cat-icon">${status2.icon}</span>
+            <span class="slot-cat-name">${status2.text}</span>
+          </div>
+        ` : `
+          <div class="summary-slot-chip is-none">
+            <span class="slot-cat-icon">—</span>
+            <span class="slot-cat-name">${t('opt_none_short') || t('opt_none')}</span>
+          </div>
+        `;
+
+        container.innerHTML = `
+          <div class="summary-day-view">
+            <div class="summary-day-banner">
+              <div class="summary-date-info">
+                <span class="summary-day-title">📅 ${dayOfWeek}, ${formattedDate}</span>
+                ${holidayName ? `<span class="summary-holiday-badge">🎌 ${escapeHtml(holidayName)}</span>` : ''}
+              </div>
+              <span class="summary-today-badge">${t('today')}</span>
+            </div>
+
+            <div class="summary-day-slots">
+              <div class="summary-slot-card morning">
+                <div class="summary-slot-header">
+                  <span>☀️ ${t('slot_morning')}</span>
+                </div>
+                <div class="summary-slot-content">
+                  ${morningBadge}
+                </div>
+              </div>
+              <div class="summary-slot-card afternoon">
+                <div class="summary-slot-header">
+                  <span>🌤️ ${t('slot_afternoon')}</span>
+                </div>
+                <div class="summary-slot-content">
+                  ${afternoonBadge}
+                </div>
+              </div>
+            </div>
+
+            <div class="summary-note-box">
+              <span class="summary-note-label">📝 ${t('note_label')}:</span>
+              <span class="summary-note-text">${note ? escapeHtml(note) : `<span class="summary-note-empty">${t('summary_no_notes')}</span>`}</span>
+            </div>
+
+            <div class="summary-actions-bar">
+              <button class="summary-btn primary" onclick="openModal('${todayKey}', ${y}, ${m}, ${d})">
+                ${t('btn_edit_today')}
+              </button>
+              <button class="summary-btn secondary" onclick="goToToday()">
+                ${t('btn_scroll_today')}
+              </button>
+            </div>
+          </div>
+        `;
+      },
+
+      /* 2. Tóm tắt Trong Tuần */
+      renderWeek(container) {
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const diffToMon = (dayOfWeek + 6) % 7;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - diffToMon);
+        monday.setHours(0, 0, 0, 0);
+
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+
+        const dict = I18N[currentLang] || I18N.vi;
+        const weekdays = dict.weekdays;
+
+        const days = [];
+        const catCounts = {};
+        let totalBusySlots = 0;
+        let totalFreeDays = 0;
+
+        for (let i = 0; i < 7; i++) {
+          const dObj = new Date(monday);
+          dObj.setDate(monday.getDate() + i);
+          const dy = dObj.getFullYear();
+          const dm = dObj.getMonth();
+          const dd = dObj.getDate();
+          const dateKey = formatDateKey(dy, dm, dd);
+          const rawData = eventsData[dateKey] || { type: "empty", note: "" };
+          const t1 = rawData.type1 || rawData.type || "empty";
+          const t2 = rawData.type2 || "none";
+          const note = rawData.note || "";
+          const holidayName = getJapanHolidayName(dy, dm, dd);
+
+          let dayBusy = false;
+          if (t1 !== "empty") {
+            catCounts[t1] = (catCounts[t1] || 0) + 1;
+            totalBusySlots++;
+            dayBusy = true;
+          }
+          if (t2 !== "none" && t2 !== "empty") {
+            catCounts[t2] = (catCounts[t2] || 0) + 1;
+            totalBusySlots++;
+            dayBusy = true;
+          }
+          if (!dayBusy) {
+            totalFreeDays++;
+          }
+
+          const isToday = (dateKey === formatDateKey(now.getFullYear(), now.getMonth(), now.getDate()));
+          const dOfWeekIdx = dObj.getDay();
+
+          days.push({
+            dObj, dy, dm, dd, dateKey, t1, t2, note, holidayName, isToday, dOfWeekIdx
+          });
+        }
+
+        const monStr = `${String(monday.getDate()).padStart(2, '0')}/${String(monday.getMonth() + 1).padStart(2, '0')}`;
+        const sunStr = `${String(sunday.getDate()).padStart(2, '0')}/${String(sunday.getMonth() + 1).padStart(2, '0')}`;
+        const weekRangeText = `${monStr} - ${sunStr}`;
+
+        let catPillsHtml = "";
+        for (let c in catCounts) {
+          const s = statusMap[c] || statusMap.empty;
+          catPillsHtml += `
+            <span class="summary-pill-chip ${s.bgClass}">
+              <span>${s.icon}</span> ${s.text} (${catCounts[c]})
+            </span>
+          `;
+        }
+        if (!catPillsHtml) {
+          catPillsHtml = `<span class="summary-note-empty">${t('summary_empty_day')}</span>`;
+        }
+
+        let stripHtml = "";
+        days.forEach(item => {
+          const s1 = statusMap[item.t1] || statusMap.empty;
+          const s2 = (item.t2 !== "none" && statusMap[item.t2]) ? statusMap[item.t2] : null;
+          const isSun = (item.dOfWeekIdx === 0);
+          const isSat = (item.dOfWeekIdx === 6);
+          let dayTitleClass = "swd-weekday";
+          if (isSun || item.holidayName) dayTitleClass += " sunday";
+          else if (isSat) dayTitleClass += " saturday";
+
+          stripHtml += `
+            <div class="summary-week-day ${item.isToday ? 'is-today' : ''}" onclick="goToDay('${item.dateKey}', ${item.dy}, ${item.dm}, ${item.dd})" title="${escapeHtml(item.note || '')}">
+              <div class="${dayTitleClass}">${weekdays[item.dOfWeekIdx]}</div>
+              <div class="swd-date">${String(item.dd).padStart(2, '0')}/${String(item.dm + 1).padStart(2, '0')}</div>
+              <div class="swd-slots">
+                <div class="swd-slot-pill ${item.t1 === 'empty' ? 'is-empty' : s1.bgClass}" title="${t('slot_morning')}: ${s1.text}">
+                  <span>${s1.icon}</span>
+                </div>
+                <div class="swd-slot-pill ${s2 ? s2.bgClass : 'is-none'}" title="${t('slot_afternoon')}: ${s2 ? s2.text : '—'}">
+                  <span>${s2 ? s2.icon : '—'}</span>
+                </div>
+              </div>
+              ${item.note ? `<span class="swd-note-icon" title="${escapeHtml(item.note)}">📝</span>` : ''}
+              ${item.isToday ? `<span class="swd-today-dot"></span>` : ''}
+            </div>
+          `;
+        });
+
+        container.innerHTML = `
+          <div class="summary-week-view">
+            <div class="summary-week-banner">
+              <div class="summary-week-title">
+                <span>📅 ${t('tab_week')}: <strong>${weekRangeText}</strong></span>
+              </div>
+              <div class="summary-week-stats">
+                <span class="stat-pill-highlight">🎯 ${totalBusySlots} ${t('summary_total_active')}</span>
+                <span class="stat-pill-sub">☕ ${totalFreeDays} ${t('summary_total_free')}</span>
+              </div>
+            </div>
+
+            <div class="summary-pill-group">
+              ${catPillsHtml}
+            </div>
+
+            <div class="summary-week-strip">
+              ${stripHtml}
+            </div>
+          </div>
+        `;
+      },
+
+      /* 3. Tóm tắt Trong Tháng */
+      renderMonth(container) {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        const dict = I18N[currentLang] || I18N.vi;
+
+        let totalBusySlots = 0;
+        let totalFreeDays = 0;
+        let totalHolidays = 0;
+        const catCounts = {};
+        const notesList = [];
+
+        for (let day = 1; day <= totalDays; day++) {
+          const dateKey = formatDateKey(year, month, day);
+          const rawData = eventsData[dateKey] || { type: "empty", note: "" };
+          const t1 = rawData.type1 || rawData.type || "empty";
+          const t2 = rawData.type2 || "none";
+          const note = (rawData.note || "").trim();
+          const holidayName = getJapanHolidayName(year, month, day);
+
+          if (holidayName) totalHolidays++;
+
+          let dayBusy = false;
+          if (t1 !== "empty") {
+            catCounts[t1] = (catCounts[t1] || 0) + 1;
+            totalBusySlots++;
+            dayBusy = true;
+          }
+          if (t2 !== "none" && t2 !== "empty") {
+            catCounts[t2] = (catCounts[t2] || 0) + 1;
+            totalBusySlots++;
+            dayBusy = true;
+          }
+          if (!dayBusy) {
+            totalFreeDays++;
+          }
+
+          if (note) {
+            notesList.push({ day, dateKey, note, t1, t2 });
+          }
+        }
+
+        const totalSlots = totalDays * 2;
+        let distributionHtml = "";
+        const sortedCats = Object.keys(catCounts).sort((a, b) => catCounts[b] - catCounts[a]);
+
+        if (sortedCats.length > 0) {
+          distributionHtml = sortedCats.map(cat => {
+            const s = statusMap[cat] || statusMap.empty;
+            const count = catCounts[cat];
+            const pct = Math.round((count / totalSlots) * 100);
+            return `
+              <div class="month-dist-row">
+                <div class="month-dist-label">
+                  <span class="dist-icon">${s.icon}</span>
+                  <span class="dist-name">${s.text}</span>
+                </div>
+                <div class="month-dist-bar-wrap">
+                  <div class="month-dist-bar ${s.bgClass}" style="width: ${Math.max(pct, 6)}%"></div>
+                </div>
+                <div class="month-dist-count"><strong>${count}</strong> buổi</div>
+              </div>
+            `;
+          }).join("");
+        } else {
+          distributionHtml = `<div class="summary-note-empty">${t('summary_empty_day')}</div>`;
+        }
+
+        let notesListHtml = "";
+        if (notesList.length > 0) {
+          notesListHtml = notesList.slice(0, 5).map(item => `
+            <div class="month-note-item" onclick="goToDay('${item.dateKey}', ${year}, ${month}, ${item.day})">
+              <span class="month-note-date">Ngày ${String(item.day).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}:</span>
+              <span class="month-note-content">${escapeHtml(item.note)}</span>
+            </div>
+          `).join("");
+          if (notesList.length > 5) {
+            notesListHtml += `<div class="month-note-more">và ${notesList.length - 5} ghi chú khác trong tháng...</div>`;
+          }
+        }
+
+        const monthLabel = dict.format_month ? dict.format_month(year, month) : `Tháng ${month + 1}/${year}`;
+
+        container.innerHTML = `
+          <div class="summary-month-view">
+            <div class="summary-month-header">
+              <span class="summary-month-title">🗓️ <strong>${monthLabel}</strong></span>
+            </div>
+
+            <div class="summary-month-stats">
+              <div class="month-stat-card">
+                <div class="mstat-val">${totalBusySlots}</div>
+                <div class="mstat-label">📊 ${t('total_events')}</div>
+              </div>
+              <div class="month-stat-card">
+                <div class="mstat-val">${totalFreeDays}</div>
+                <div class="mstat-label">☕ ${t('total_off_days')}</div>
+              </div>
+              <div class="month-stat-card">
+                <div class="mstat-val">${totalHolidays}</div>
+                <div class="mstat-label">🎌 ${t('total_holidays')}</div>
+              </div>
+            </div>
+
+            <div class="summary-section-sub">📊 Phân bổ lịch trình</div>
+            <div class="month-dist-list">
+              ${distributionHtml}
+            </div>
+
+            ${notesListHtml ? `
+              <div class="summary-section-sub">📝 Ghi chú trong tháng (${notesList.length})</div>
+              <div class="month-notes-box">
+                ${notesListHtml}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+    };
+
+    /* ========================================================
+       CHẾ ĐỘ XEM: TIMELINE & GRID MONTH VIEW
        ======================================================== */
     function switchView(mode) {
       currentView = mode;
       localStorage.setItem("app_view", mode);
       renderCurrentView();
+      setTimeout(() => {
+        scrollToToday(false);
+      }, 100);
     }
 
     function renderCurrentView() {
@@ -1478,9 +2705,10 @@
         renderTimeline();
       }
       renderCounters();
+      ScheduleSummary.render();
     }
 
-    /* Hiển thị Dạng Danh sách (Timeline View) */
+    /* Hiển thị Dạng Danh sách (Timeline View - Bố cục Sáng/Chiều & Ghi chú) */
     function renderTimeline() {
       const container = document.getElementById("timelineContainer");
       container.innerHTML = "";
@@ -1504,7 +2732,9 @@
         const type2 = rawData.type2 || "none";
         const note = rawData.note || "";
 
-        const dayOfWeek = weekdays[new Date(year, month, day).getDay()];
+        const dateObj = new Date(year, month, day);
+        const dayOfWeekIndex = dateObj.getDay();
+        const dayOfWeek = (dict.weekdays_full && dict.weekdays_full[dayOfWeekIndex]) || weekdays[dayOfWeekIndex];
         const holidayName = getJapanHolidayName(year, month, day);
 
         if (filterType !== "all") {
@@ -1512,53 +2742,88 @@
         }
         if (searchQuery && !note.toLowerCase().includes(searchQuery)) continue;
 
+        const isToday = (dateKey === todayStr);
+        const isSunday = (dayOfWeekIndex === 0);
+        const isSaturday = (dayOfWeekIndex === 6);
+
         const card = document.createElement("div");
-        card.className = `day-card ${dateKey === todayStr ? "today" : ""}`;
+        card.id = `day-card-${dateKey}`;
+        card.className = `day-card ${isToday ? "today" : ""}`;
         card.onclick = () => openModal(dateKey, year, month, day);
 
         const status1 = statusMap[type1] || statusMap.empty;
         const status2 = (type2 !== "none" && statusMap[type2]) ? statusMap[type2] : null;
 
-        let dateBgClass = "bg-empty";
-        if (type1 !== "empty") {
-          dateBgClass = status1.bgClass;
-        } else if (holidayName) {
-          dateBgClass = "bg-holiday";
-        }
+        // Xử lý hiển thị Buổi Sáng (Mục 1)
+        const isType1Empty = (type1 === "empty");
+        const slot1Html = `
+          <div class="slot-badge-chip ${isType1Empty ? 'is-empty' : status1.bgClass}">
+            <span class="slot-cat-icon">${status1.icon}</span>
+            <span class="slot-cat-name">${status1.text}</span>
+          </div>
+        `;
 
-        let infoHtml = "";
+        // Xử lý hiển thị Buổi Chiều (Mục 2)
+        let slot2Html = "";
         if (status2) {
-          infoHtml = `
-            <div class="info-item ${status1.bgClass}">
-              <span>${status1.icon}</span> <span>${status1.text}</span>
-            </div>
-            <div class="info-item ${status2.bgClass}">
-              <span>${status2.icon}</span> <span>${status2.text}</span>
+          slot2Html = `
+            <div class="slot-badge-chip ${status2.bgClass}">
+              <span class="slot-cat-icon">${status2.icon}</span>
+              <span class="slot-cat-name">${status2.text}</span>
             </div>
           `;
         } else {
-          infoHtml = `
-            <div class="info-single ${dateBgClass}">
-              <span class="info-icon">${status1.icon}</span>
-              <span class="info-title">${status1.text}</span>
-              ${holidayName ? `<span class="holiday-subtext">🎌 ${holidayName}</span>` : ''}
+          slot2Html = `
+            <div class="slot-badge-chip is-none">
+              <span class="slot-cat-icon">—</span>
+              <span class="slot-cat-name">${t('opt_none_short') || t('opt_none')}</span>
             </div>
           `;
         }
 
+        let weekdayClass = "day-weekday";
+        let dateNumClass = "day-num-month";
+        if (holidayName || isSunday) {
+          weekdayClass += " sunday";
+          dateNumClass += " holiday";
+        } else if (isSaturday) {
+          weekdayClass += " saturday";
+          dateNumClass += " saturday";
+        }
+
+        const formattedDay = String(day).padStart(2, '0');
+        const formattedMonth = String(month + 1).padStart(2, '0');
+
         card.innerHTML = `
-          <div class="left-badge ${dateBgClass}">
-            <div class="date-section ${dateBgClass}">
-              <span class="date-num">${String(day).padStart(2, '0')}</span>
-              <span class="date-weekday">${dayOfWeek}</span>
-            </div>
-            <div class="divider-line"></div>
-            <div class="info-section">
-              ${infoHtml}
-            </div>
+          <div class="day-date-col">
+            <div class="${weekdayClass}">${dayOfWeek}</div>
+            <div class="${dateNumClass}">${formattedDay}/${formattedMonth}</div>
+            ${holidayName ? `<div class="day-holiday-pill" title="${escapeHtml(holidayName)}">🎌 ${escapeHtml(holidayName)}</div>` : ''}
+            ${isToday ? `<div class="today-badge-pill">${t('today')}</div>` : ''}
           </div>
-          <div class="note-section">
-            ${note ? escapeHtml(note) : '<span class="note-placeholder"></span>'}
+          <div class="day-content-col">
+            <div class="day-slots-row">
+              <div class="day-slot morning">
+                <div class="slot-label-bar">
+                  <span>☀️ ${t('slot_morning')}</span>
+                </div>
+                <div class="slot-badge-wrap">
+                  ${slot1Html}
+                </div>
+              </div>
+              <div class="day-slot afternoon">
+                <div class="slot-label-bar">
+                  <span>🌤️ ${t('slot_afternoon')}</span>
+                </div>
+                <div class="slot-badge-wrap">
+                  ${slot2Html}
+                </div>
+              </div>
+            </div>
+            <div class="day-notes-row">
+              <span class="notes-prefix">${t('note_label')}:</span>
+              <span class="notes-body">${note ? escapeHtml(note) : `<span class="notes-empty">—</span>`}</span>
+            </div>
           </div>
         `;
         container.appendChild(card);
@@ -2014,7 +3279,11 @@
     }
 
     // Hiển thị ban đầu
+    ScheduleSummary.init();
     renderCurrentView();
+    setTimeout(() => {
+      scrollToToday(true);
+    }, 250);
   </script>
 </body>
 </html>
